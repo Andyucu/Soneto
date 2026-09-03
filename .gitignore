@@ -11,3 +11,6 @@ logs/
 # Stray artifacts from accidental Windows shell redirects
 err.log
 nul
+
+# Local Claude Code session state
+.claude/

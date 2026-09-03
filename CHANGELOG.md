@@ -22,12 +22,31 @@ this process's own window) but in a real off-screen WPF window instead of Avalon
 table keyed to the *test process's own real, dynamically-resolved executable name* maps to
 `Method=UnicodeSynth`; a fresh, throwaway `WindowsTextInjector.CaptureTarget()` is called
 immediately after giving that window real OS focus, with no yield point in between — the
-captured target can never be an arbitrary foreground app. Proves the override is genuinely
-*applied*, not just configured, via a real observable side effect rather than a log string:
-`UnicodeSynth` never touches the clipboard, while the base `ClipboardPaste` default (still
-requested by the test's own options) always does — the test asserts the real Win32 clipboard
-sequence number is unchanged before/after injection, plus a Romanian-diacritic marker string
-landing byte-correct in the target. Passed on first run.
+captured target can never be an arbitrary foreground app, modulo one honest residual gap noted
+below. Proves the override is genuinely *applied*, not just configured, via a real observable
+side effect rather than a log string: `UnicodeSynth` never touches the clipboard, while the
+base `ClipboardPaste` default (still requested by the test's own options) always does — the
+test asserts the real Win32 clipboard sequence number is unchanged before/after injection, plus
+a Romanian-diacritic marker string landing byte-correct in the target.
+
+Two rounds of findings, both fixed, before landing clean — not a single favorable run. Round 1
+(test-runner verification): 1 failure in 6 isolated runs (`Activate()`/`Focus()` requesting OS
+focus does not synchronously guarantee it has landed by the next statement; a fixed 150ms
+post-injection settle wait was occasionally too short) — fixed with two bounded, pumped polls
+instead of a longer fixed sleep, which would only move the same races further out. Round 2
+(code review), BLOCKING: both polls' boolean results were discarded at their call sites, so a
+timed-out focus poll would silently fall through to a real `CaptureTarget()`/`InjectAsync`
+anyway — in a genuine stolen-focus scenario this could have sent real synthetic keystrokes into
+whatever else had focus, exactly what this pattern exists to prevent. Fixed by hard-failing
+before `CaptureTarget()` runs if the focus poll times out; also softened an overstated doc
+comment claim to honestly note the small residual window between confirmed focus and the real
+`SendInput` call (`WindowsTextInjector.InjectAsync` re-fetches the foreground window itself at
+send time) — the same already-accepted gap the shipped Permissions Doctor self-test has.
+Re-verified: 10/10 clean isolated runs after round 1, 6/6 more after round 2 (16/16 total), two
+clean full-suite re-runs. **Follow-up flagged, not fixed (out of scope):** the same
+unguarded-focus assumption this test originally had still exists, uncorrected, in shipped
+`PermissionsDoctorViewModel.RunInjectionSelfTestAsync` — a real user could intermittently see a
+false red there; recorded in `Docs/PROJECT-MEMORY.md` as a standing follow-up.
 
 `Docs/MANUAL-TESTS.md` Section A's per-app checkboxes deliberately untouched (a note was added
 pointing at this new coverage, but no row was checked — those require real human verification

@@ -104,20 +104,43 @@ human-only task per this file's own "Live-desktop testing caution" below -- not 
 real foreground app was opened or targeted this item. Built the strongest available
 substitute instead: a new, permanent xUnit regression test,
 `tests/Soneto.Platform.Windows.Tests/PerAppOverrideEndToEndTests.cs` (`Category=Hardware`,
-excluded from the default filter, run deliberately once -- passed). Mirrors item 7's
-Permissions Doctor injection self-test pattern exactly, but in a real WPF off-screen window
-(this test project already references WPF via `UseWPF=true`) instead of Avalonia: a per-app
-table keyed to the TEST PROCESS'S OWN real, dynamically-resolved executable name maps to
-`Method=UnicodeSynth`; that window gets real OS focus via `Activate()`/`Focus()`, then a
-fresh, throwaway `WindowsTextInjector.CaptureTarget()` is called immediately after with no
-yield point in between, guaranteeing the captured target is the test's own window, never an
-arbitrary foreground app. Proves the per-app override is genuinely APPLIED, not just
-configured, via a real observable side effect rather than a log string: `UnicodeSynth` never
-touches the clipboard, while the base `ClipboardPaste` default (which the test's own
+excluded from the default filter). Mirrors item 7's Permissions Doctor injection self-test
+pattern exactly, but in a real WPF off-screen window (this test project already references
+WPF via `UseWPF=true`) instead of Avalonia: a per-app table keyed to the TEST PROCESS'S OWN
+real, dynamically-resolved executable name maps to `Method=UnicodeSynth`; that window gets
+real OS focus via `Activate()`/`Focus()`, then a fresh, throwaway
+`WindowsTextInjector.CaptureTarget()` is called immediately after, guaranteeing the captured
+target is the test's own window, never an arbitrary foreground app (see below for the honest,
+small residual gap in that guarantee). Proves the per-app override is genuinely APPLIED, not
+just configured, via a real observable side effect rather than a log string: `UnicodeSynth`
+never touches the clipboard, while the base `ClipboardPaste` default (which the test's own
 `InjectionOptions` still requests) always does, so the test asserts the real Win32 clipboard
 sequence number is unchanged before/after injection -- structural proof the real per-app
-resolution branch ran -- combined with a Romanian-diacritic marker string landing
-byte-correct in the window. Full details/reasoning in
+resolution branch ran -- combined with a Romanian-diacritic marker string landing byte-correct
+in the window. **Flaky initially, fixed, code-review found a BLOCKING gap in that first fix,
+fixed again, then re-verified clean -- two rounds, not a single favorable run.** Round 1:
+independent test-runner verification found 1 failure in 6 isolated runs
+("Activate()"/"Focus()" don't SYNCHRONOUSLY guarantee OS focus has landed by the next
+statement; a fixed 150ms post-injection wait was occasionally too short) -- fixed with two
+bounded, pumped polls (pump this thread's own Dispatcher, no real yield to another process)
+instead of assuming a single call/sleep suffices. Round 2, code review, BLOCKING: both polls'
+boolean results were discarded at their call sites -- a timed-out focus poll would silently
+fall through to a real `CaptureTarget()`/`InjectAsync` anyway, meaning a genuinely stolen-focus
+scenario could send this test's real synthetic keystrokes into whatever else had focus, exactly
+the failure this whole self-owned-window pattern exists to prevent -- fixed by hard-failing
+(`throw`) BEFORE `CaptureTarget()` if the focus poll times out; the doc comment's prior
+"structurally cannot land anywhere but the test's own window" claim was also softened to
+honestly acknowledge the residual small window between confirmed-focus and the real
+`SendInput` (the same already-accepted gap `PermissionsDoctorViewModel`'s own self-test has).
+Re-verified: 10/10 clean isolated runs after round 1's fix, 6/6 more after round 2's fix (16/16
+total), plus two clean full-suite re-runs. **Known follow-up gap, flagged not fixed (out of
+this item's scope):** code review found the SAME unguarded-focus assumption (single `Focus()`
+call assumed synchronous, fixed `Task.Delay(100ms)` assumed sufficient) still exists,
+uncorrected, in shipped production code --
+`Soneto.App.ViewModels.PermissionsDoctorViewModel.RunInjectionSelfTestAsync` (the "Can
+synthesize input" Permissions Doctor check) -- a real user could intermittently see a false red
+there on a real machine under load. Not fixed this item (scope); a real follow-up item should
+apply the same bounded-poll fix there. Full details/reasoning in
 `Docs/soneto-implementation-plan-phase4.md`'s item 4 row. `Docs/MANUAL-TESTS.md` Section A's
 per-app checkboxes were deliberately left untouched (only a note added pointing at the new
 coverage) -- those rows require real human verification against real apps, not done this

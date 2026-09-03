@@ -29,13 +29,29 @@ namespace Soneto.Platform.Windows.Tests;
 /// real, normally-rendered (not zero-size/zero-opacity -- that broke paste routing when tried
 /// first, per that class's own doc comment) but off-screen window living inside this SAME test
 /// process is given real OS focus via an ordinary <see cref="UIElement.Focus()"/> call, and a
-/// FRESH, throwaway <see cref="ITextInjector.CaptureTarget"/> is called IMMEDIATELY afterward
-/// with no yield point in between -- guaranteeing the captured target is this process's own
-/// window, never whatever else happens to have OS focus. This is real product code
-/// (<see cref="WindowsTextInjector.InjectAsync"/>, unmodified, including its real
-/// <see cref="PerAppOverrideResolver.Resolve"/> call) exercising the real per-app resolution
-/// mechanism end-to-end, not a mock -- it just can never land anywhere but this test's own
-/// window.
+/// FRESH, throwaway <see cref="ITextInjector.CaptureTarget"/> is called after a bounded,
+/// pumped poll HARD-FAILS the test (before <c>CaptureTarget()</c> ever runs -- see
+/// <c>RunSelfOwnedWindowInjection</c>'s own inline comment) if real OS focus is not genuinely
+/// confirmed on this window first -- so the captured target is, as far as this test can
+/// verify, this process's own window, never whatever else happens to have OS focus. This is
+/// real product code (<see cref="WindowsTextInjector.InjectAsync"/>, unmodified, including its
+/// real <see cref="PerAppOverrideResolver.Resolve"/> call) exercising the real per-app
+/// resolution mechanism end-to-end, not a mock.
+/// </para>
+///
+/// <para>
+/// <b>Honest residual gap (code review finding, not fully closed by the focus-confirmation
+/// poll above):</b> <see cref="WindowsTextInjector.InjectAsync"/> re-fetches
+/// <c>GetForegroundWindow()</c> itself at actual <c>SendInput</c> time, not the earlier
+/// <see cref="ITextInjector.CaptureTarget"/> handle -- so there is a small residual window
+/// (roughly <c>PreDelay</c> + the clipboard-sequence-number read, on the order of tens of
+/// milliseconds) between this test confirming focus and the real send where OS focus could, in
+/// principle, still drift to a different window. This is the same already-accepted risk
+/// <c>PermissionsDoctorViewModel.RunInjectionSelfTestAsync</c>'s own doc comment describes for
+/// the shipped production self-test this pattern mirrors -- not a new or larger gap introduced
+/// here, and not realistically triggerable without something else on the machine actively
+/// stealing focus at that exact instant, but worth stating plainly rather than overclaiming a
+/// guarantee this test cannot fully make.
 /// </para>
 ///
 /// <para>
@@ -94,9 +110,13 @@ public sealed class PerAppOverrideEndToEndTests
             result.Landed,
             $"Marker text (with Romanian diacritics) did not land in the self-owned window's " +
             $"TextBox as expected. Final text: \"{result.FinalText}\".");
-        Assert.Equal(
-            result.ClipboardSeqBefore,
-            result.ClipboardSeqAfter); // unchanged -> proves the real UnicodeSynth branch ran, not ClipboardPaste
+        // Unchanged -> proves the real UnicodeSynth branch ran, not ClipboardPaste. Nit (code
+        // review, low severity): in principle some unrelated process/parallel test could touch
+        // the real system clipboard during this exact window and bump the sequence number for
+        // a reason having nothing to do with this test, which could only ever cause a spurious
+        // FAILURE here, never mask a real bug (a genuine ClipboardPaste fall-through would
+        // reliably bump the sequence number every time, not intermittently).
+        Assert.Equal(result.ClipboardSeqBefore, result.ClipboardSeqAfter);
     }
 
     private readonly record struct InjectionResult(
@@ -145,17 +165,37 @@ public sealed class PerAppOverrideEndToEndTests
             // CaptureTarget() below wait until focus has GENUINELY landed, rather than
             // optimistically assuming a single Focus() call already did.
             var hwnd = new WindowInteropHelper(window).Handle;
-            PollUntil(
+            bool focusConfirmed = PollUntil(
                 () => GetForegroundWindow() == hwnd && textBox.IsKeyboardFocusWithin,
                 timeout: TimeSpan.FromSeconds(3),
                 pollInterval: TimeSpan.FromMilliseconds(15));
 
+            // BLOCKING safety fix (code review): a timed-out poll must hard-fail HERE, before
+            // CaptureTarget() ever runs -- letting execution fall through would mean
+            // CaptureTarget() (a real GetForegroundWindow() call) happily captures whatever
+            // ELSE currently has OS focus, and the real SendInput a few lines below would then
+            // send this test's synthetic marker keystrokes into an arbitrary real foreground
+            // application. That is exactly the "never touch the live desktop unsupervised"
+            // failure mode this whole self-owned-window pattern exists to prevent, and exactly
+            // what this class's own doc comment claims cannot happen -- so it must never be
+            // allowed to happen silently.
+            if (!focusConfirmed)
+            {
+                throw new InvalidOperationException(
+                    "Focus confirmation timed out: this test's own off-screen window never "
+                    + "genuinely became the real Win32 foreground window with WPF keyboard "
+                    + "focus inside its TextBox within the poll window. Aborting BEFORE "
+                    + "CaptureTarget()/InjectAsync rather than risking a real synthetic paste "
+                    + "landing in whatever else currently has OS focus.");
+            }
+
             var injector = new WindowsTextInjector(NullLogger<WindowsTextInjector>.Instance, perApp);
 
             // Legitimately captures whatever has OS focus right now -- safe here specifically
-            // because Focus()/Activate() (confirmed landed by the poll immediately above) just
-            // gave OUR OWN window real OS focus via ordinary means, with no yield point between
-            // that confirmation and this call (see class doc comment).
+            // because Focus()/Activate() (confirmed landed by the poll immediately above, and
+            // hard-failed above if it never did) just gave OUR OWN window real OS focus via
+            // ordinary means, with no yield point between that confirmation and this call (see
+            // class doc comment).
             object? target = injector.CaptureTarget();
 
             int seqBefore = ClipboardManager.GetSequenceNumber();
@@ -186,14 +226,18 @@ public sealed class PerAppOverrideEndToEndTests
             // Poll (bounded, same "pump this thread's own Dispatcher, no real yield" technique
             // as the focus-confirmation poll above) until the marker has genuinely landed or the
             // timeout elapses -- the assertion below still fails honestly if it never does.
-            PollUntil(
+            // Result checked explicitly (code review nit) rather than silently falling through
+            // to the assertion in the [Fact] method -- a timeout here is a real, distinct
+            // failure mode (the marker never arrived) that deserves its own clear message
+            // rather than surfacing as a possibly-confusing downstream Assert.True failure.
+            bool markerLanded = PollUntil(
                 () => (textBox.Text ?? string.Empty).Contains(MarkerText, StringComparison.Ordinal),
                 timeout: TimeSpan.FromSeconds(2),
                 pollInterval: TimeSpan.FromMilliseconds(25));
 
             int seqAfter = ClipboardManager.GetSequenceNumber();
             string finalText = textBox.Text ?? string.Empty;
-            bool landed = finalText.Contains(MarkerText, StringComparison.Ordinal);
+            bool landed = markerLanded && finalText.Contains(MarkerText, StringComparison.Ordinal);
 
             return new InjectionResult(outcome, landed, finalText, seqBefore, seqAfter);
         }
