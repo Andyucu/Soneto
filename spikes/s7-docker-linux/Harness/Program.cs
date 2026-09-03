@@ -16,22 +16,43 @@ DateTimeOffset lastDownSentAt = default, lastUpSentAt = default;
 
 source.Pressed += (_, e) => { pressedAt.Add((e.Timestamp, lastDownSentAt)); Console.WriteLine($"[HARNESS] Pressed fired, ts={e.Timestamp:O}"); };
 source.Released += (_, e) => { releasedAt.Add((e.Timestamp, lastUpSentAt)); Console.WriteLine($"[HARNESS] Released fired, ts={e.Timestamp:O}"); };
+
+// Item 5 (Phase 4, §4.6) widening: retry on ANY Faulted reason, not just the
+// "re-enumeration required" hotplug shape -- this mirrors real production behavior exactly
+// (SessionController.HandleHookFaultedAsync's real watchdog reacts to IHotkeySource.Faulted
+// unconditionally, regardless of e.Reason) and is needed for the device-KILL scenario
+// (run-devicekill-test.sh), whose fault can surface as either an EPOLLERR/EPOLLHUP on the
+// dead device fd OR an inotify IN_DELETE "re-enumeration required" -- both must trigger
+// recovery, exactly like production. Backoff shape (5 attempts, 1s/2s/4s/8s/16s) mirrors
+// SessionController's own documented "Watchdog backoff shape" (src/Soneto.Core/SessionController.cs)
+// verbatim -- this harness does not construct a real SessionController (impractical in this
+// throwaway container harness: no audio/ASR fakes wired here), so the backoff loop itself is
+// reproduced here rather than reused, but the NUMBERS and the "any Faulted triggers a bounded
+// retry loop, never restructured" shape are the same real, documented production contract.
 source.Faulted += async (_, e) =>
 {
     Console.WriteLine($"[HARNESS] FAULTED: {e.Reason} {e.Exception}");
-    if (e.Reason.Contains("re-enumeration required", StringComparison.Ordinal))
+    const int maxAttempts = 5;
+    var delay = TimeSpan.FromSeconds(1);
+    for (int attempt = 1; attempt <= maxAttempts; attempt++)
     {
-        Console.WriteLine("[HARNESS] Hotplug-shaped fault detected -- calling RestartAsync (SessionController's real job in production) to re-enumerate...");
         try
         {
             await source.RestartAsync(CancellationToken.None);
-            Console.WriteLine("[HARNESS] RestartAsync completed successfully after hotplug.");
+            Console.WriteLine($"[HARNESS] RECOVERED: RestartAsync succeeded on attempt {attempt}/{maxAttempts}.");
+            return;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[HARNESS] RestartAsync THREW: {ex}");
+            Console.WriteLine($"[HARNESS] RestartAsync attempt {attempt}/{maxAttempts} failed: {ex.Message}");
+            if (attempt < maxAttempts)
+            {
+                await Task.Delay(delay);
+                delay += delay; // exponential, same shape as SessionController.HandleHookFaultedAsync
+            }
         }
     }
+    Console.WriteLine("[HARNESS] PERMANENTLY FAULTED: all restart attempts exhausted.");
 };
 
 Console.WriteLine("[HARNESS] Starting LinuxHotkeySource against RightControl...");

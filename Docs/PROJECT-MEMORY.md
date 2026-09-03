@@ -21,7 +21,7 @@ C#/.NET 10 + Avalonia 11/12. ASR: NVIDIA `parakeet-tdt-0.6b-v3` int8 via `org.k2
 — English + Romanian, no fallback backend (hard constraint). Targets Windows 11 first, Fedora KDE
 Wayland for parity, macOS deferred. Repo root `e:/Projects/Soneto`, no git repo.
 
-## Current phase: Phase 4 (Platform Hardening), items 0-4 done (item 1 partial, item 4 automatable half only); item 5 next
+## Current phase: Phase 4 (Platform Hardening), items 0-5 done (item 1 partial, item 4 automatable half only); item 6 (docs closeout) next
 
 **Phase 4 plan** (`Docs/soneto-implementation-plan-phase4.md`, written 2026-09-03): scope
 confirmed with the user — macOS deferred entirely (its own future phase); Linux verification via
@@ -147,7 +147,34 @@ coverage) -- those rows require real human verification against real apps, not d
 session. Full suite after, zero regressions: `Soneto.Core.Tests` 533/533,
 `Soneto.Platform.Windows.Tests` 100/100 (+2 pre-existing skips, new Hardware test correctly
 excluded from this default count), `Soneto.Platform.Linux.Tests` 55/55, `Soneto.App.Tests`
-60/60; build 0 warnings/0 errors. Next: item 5 (hook-death recovery re-verification, §4.6).
+60/60; build 0 warnings/0 errors.
+**Item 5 done (2026-09-03), verification only, no redesign, no production code changed.**
+Confirmed the Phase 1 item 9 watchdog (`SessionController.HandleHookFaultedAsync`: 5 attempts,
+1s/2s/4s/8s/16s backoff) genuinely works against a REAL dead hook/device on both platforms, not
+just a fake one. **Windows**: new permanent `tests/Soneto.Platform.Windows.Tests/
+HookDeathRecoveryHardwareTests.cs` (`Category=Hardware`) — a real `WindowsHotkeySource` wired
+into a real `SessionController` has its real, installed `SimpleGlobalHook` genuinely `Stop()`'d
+out from under it (reflection into `_hook`, same technique the existing heartbeat tests already
+use), then the test waits REAL wall-clock time (no reflection-invoked tick shortcut) for the
+real 60s-idle heartbeat to detect it and the real watchdog to reinstall a genuinely new, running
+hook. 2/2 clean runs, ~62s each. **Real, already-known limitation, not new**: post-recovery
+"genuinely working" verification had to use the heartbeat's own probe-key channel (F24), not
+the trigger key, because `WindowsHotkeySourceTests` already established that
+`EventSimulator`-driven synthetic input is indistinguishable from `WindowsTextInjector`'s own
+synthetic paste-chord modifiers and is deliberately ignored by the trigger-key branch. **Linux**:
+`spikes/s7-docker-linux/` extended with `run-devicekill-test.sh` — a real uinput keyboard is
+genuinely destroyed mid-session while the real `LinuxHotkeySource` reader thread is polling it;
+2/2 clean runs, real EPOLLERR/EPOLLHUP fault, real backoff-mirrored recovery once a replacement
+device appears. **One real finding, in a test script, not in `LinuxHotkeySource`**: found, fixed,
+re-verified — the script's own `mknod` silently no-op'd on a kernel-recycled device name,
+leaving a stale node the class correctly refused to open. Full details:
+`Docs/soneto-implementation-plan-phase4.md`'s item 5 row and `spikes/s7-docker-linux/README.md`.
+**Not wired into a permanent `[Trait("Category","DockerLinux")]` suite** (§4.7's own suggested
+follow-up, still open) — judged out of proportion for a verification-only item; documented the
+one-off spike run instead, same precedent as items 0/1. Full suite after: `Soneto.Core.Tests`
+533/533, `Soneto.Platform.Windows.Tests` 100/100 (+2 pre-existing skips, new Hardware test
+correctly excluded), `Soneto.Platform.Linux.Tests` 55/55, `Soneto.App.Tests` 60/60; build 0
+warnings/0 errors. Next: item 6 (docs closeout).
 
 **Phase 1 (Headless Daemon) — items 1-12, code-complete.** Three structurally-blocked gaps
 carried forward, not oversights: Linux/Wayland real-hardware verification (needs spike S5 + real

@@ -10,6 +10,36 @@ the policy this file follows going forward.
 
 ---
 
+## 2026-09-03 — Phase 4 item 5: hook-death recovery re-verified against real conditions
+
+Verification only, no redesign — Phase 1 item 9's watchdog (`SessionController.
+HandleHookFaultedAsync`: 5 attempts, 1s/2s/4s/8s/16s backoff) was thoroughly unit-tested but
+never exercised against a genuinely dead hook/device on either platform. Now it has, on both.
+
+**Windows**: new permanent `HookDeathRecoveryHardwareTests.cs` (`Category=Hardware`) — a real
+`WindowsHotkeySource`'s real, installed `SimpleGlobalHook` is genuinely `Stop()`'d out from
+under it (reflection, same technique the existing heartbeat tests use), then the test waits
+REAL wall-clock time (no reflection-invoked-tick shortcut) for the real 60s-idle heartbeat to
+detect it and the real watchdog to reinstall a genuinely new, running hook. 2/2 clean runs,
+~62s each. Post-recovery liveness had to be proven via the heartbeat's own probe-key channel
+(F24), not the trigger key — `WindowsHotkeySourceTests` already established that
+`EventSimulator`-driven input is indistinguishable from `WindowsTextInjector`'s own synthetic
+paste-chord modifiers and is deliberately ignored on the trigger-key branch; a known, pre-existing
+limitation, not a new one.
+
+**Linux**: `spikes/s7-docker-linux/` extended with `run-devicekill-test.sh` — a real uinput
+keyboard is genuinely destroyed mid-session while the real `LinuxHotkeySource` reader thread
+polls it. 2/2 clean runs: real EPOLLERR/EPOLLHUP fault, real backoff-mirrored recovery once a
+replacement device appears. One real finding — in the test script, not `LinuxHotkeySource`:
+`mknod` silently no-op'd on a kernel-recycled device name, leaving a stale node the class
+correctly refused to open; fixed with `rm -f` before `mknod`.
+
+No production code changed — both findings were test/harness-script bugs. Not wired into a
+permanent `DockerLinux`-trait suite (§4.7's own suggested follow-up, still open); documented the
+one-off spike run instead, same precedent as items 0/1. Suite unchanged from item 4's baseline
+(new test excluded from default filter): Core 533/533, Windows 100/100 (+2 skips), Linux 55/55,
+App 60/60; build clean.
+
 ## 2026-09-03 — Phase 4 item 4: real per-app injection fallback verified (automatable half)
 
 Built the strongest available substitute for the real human VS Code/Windows Terminal check

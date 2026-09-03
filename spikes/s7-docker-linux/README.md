@@ -153,14 +153,57 @@ container runs). Without it, uinput devices only exposed a `kbd` handler, never 
    result (hotplug detection + restart + continued operation) doesn't depend on it, and jitter was
    already cleanly measured in the simpler single-keyboard test above.
 
+7. **Device-KILL recovery** (`run-devicekill-test.sh`, Phase 4 item 5, §4.6) — the closer match
+   to "Windows will unhook you eventually" than item 1's device-ADD/hotplug test above: keyboard
+   #1 is created, the real `LinuxHotkeySource` starts against it, a normal press/release is
+   confirmed, then keyboard #1 is genuinely DESTROYED mid-session (`uinput_kbd.c`'s `q` command:
+   `UI_DEV_DESTROY` + `close(fd)`) while the reader thread is actively polling its fd — the
+   closest a container can get to "the underlying device died out from under an active reader."
+   **Result: PASS, 2/2 clean runs.** The real, unmodified `LinuxHotkeySource` correctly raised
+   `Faulted` ("A device fd ... reported EPOLLERR/EPOLLHUP") the moment the device died. The
+   harness's `Faulted` handler (`Harness/Program.cs`, widened this item from a hotplug-only
+   filter to react to ANY fault, matching `SessionController.HandleHookFaultedAsync`'s real
+   production behavior — see that file's own comment) mirrors `SessionController`'s exact
+   documented backoff shape (5 attempts, 1s/2s/4s/8s/16s) rather than reusing the real class
+   directly (constructing a full `SessionController` was judged impractical in this throwaway
+   container harness — no audio/ASR fakes wired here — so the NUMBERS and the
+   "any-fault-triggers-a-bounded-retry-loop" shape are real/production, but the loop itself is a
+   deliberate mirror, not the literal class). Attempt 1 failed for real (the replacement
+   keyboard wasn't ready yet — 0 devices found, `InvalidOperationException`, exactly
+   `LinuxHotkeySource.StartAsync`'s own real "no keyboard-like device" guard); a replacement
+   keyboard #2 was created ~2s into the backoff window (during the real 1s-then-2s sleep between
+   attempts 1 and 2); **attempt 2 succeeded for real**, re-enumerating and finding the
+   replacement device, and a subsequent real press/release cycle through it fired
+   `Pressed`/`Released` correctly. Recovers the same way `WindowsHotkeySource` does: detect a
+   genuinely dead hook/device via a real fault signal, retry with real exponential backoff,
+   recover once a working hook/device is available again. **One real finding, in the test
+   SCRIPT, not `LinuxHotkeySource` — found, fixed, re-verified clean:** the first run failed
+   permanently (all 5 attempts exhausted) because `run-devicekill-test.sh`'s own `mknod`
+   silently no-op'd ("File exists") when the kernel recycled the same `eventN` name for the
+   replacement device, leaving a STALE device node (old major:minor) that `LinuxHotkeySource`
+   correctly failed to open (`errno-ish result=-1`) — a real, correct rejection of a bad node,
+   not a hotkey-source bug. Fixed by having the script's `wait_for_new_event` helper always
+   `rm -f` before `mknod`, so a reused event name always gets a fresh node matching whatever
+   device is currently live (exactly what `udev` does automatically on a real desktop). Same
+   already-known fd-leak-tolerance fallback from item 1's hotplug test fired again here (2s
+   reader-thread shutdown timeout exceeded) — expected, not a new finding. **Not wired into a
+   permanent xUnit `[Trait("Category","DockerLinux")]` suite this item** (§4.7's own suggested
+   follow-up) — judged out of proportion for a "verification only" item per its own scope
+   framing; this one-off, reproducible spike run (2/2 clean) is documented here instead, the
+   same precedent items 0/1 already established. Re-running requires nothing beyond the same
+   Docker command below with `run-devicekill-test.sh` in place of `run-hotkey-test.sh`.
+
 ## Files here
 
 - `uinput_kbd.c` — the controllable virtual-keyboard helper (stdin commands `d`/`u`/`q`).
 - `Harness/` — a real .NET console app referencing the actual `Soneto.Core`/`Soneto.Platform.Linux`
-  projects (not a reimplementation), driving `LinuxHotkeySource` directly.
+  projects (not a reimplementation), driving `LinuxHotkeySource` directly. `Faulted` handling
+  mirrors `SessionController`'s real documented backoff shape (5 attempts, 1s/2s/4s/8s/16s),
+  widened (Phase 4 item 5) to react to ANY fault reason, not just the hotplug shape.
 - `run-hotkey-test.sh` — orchestrates device creation, `mknod`, harness build/run, and a
   press+release cycle. `run-hotkey-test-idle.sh` — the no-dispose variant used to isolate the
-  shutdown-fault finding above.
+  shutdown-fault finding above. `run-hotplug-test.sh` — device-ADD (hotplug) recovery (item 1).
+  `run-devicekill-test.sh` — device-KILL recovery (item 5, §4.6), see above.
 - `Dockerfile` in this folder builds the exact image used (`mcr.microsoft.com/dotnet/sdk:10.0` +
   apt-installed `gcc`/`libc6-dev`/`linux-libc-dev`/`weston`/`wl-clipboard`/`ydotool`/`procps`/
   `iproute2`).
