@@ -1,0 +1,66 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="220" d:DesignHeight="64"
+        x:Class="Soneto.App.Views.RecordingHud"
+        Title="Soneto — recording"
+        Width="{DynamicResource SizeHudWidth}"
+        Height="{DynamicResource SizeHudHeight}"
+        WindowDecorations="None"
+        ShowInTaskbar="False"
+        Topmost="True"
+        CanResize="False"
+        WindowStartupLocation="Manual"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        ShowActivated="False">
+
+  <!-- Item 5 (§3.9): the Recording HUD. Two hard requirements drive this file's shape,
+       verified against Avalonia 12.0.4's actual API (not assumed from memory):
+       (1) MUST NOT steal focus from whatever app the user is dictating into —
+       Window.ShowActivated (a real bool property on Avalonia.Controls.Window,
+       confirmed via reflection against the pinned 12.0.4 package) is set False above,
+       so calling Show() never activates/focuses this window;
+       (2) positioned at a FIXED screen corner (bottom-right of the primary screen),
+       not tracking the cursor — simpler and deterministic, no cursor-tracking API
+       dependency, chosen and documented here per §3.9's own "implementer's call,
+       document the choice" allowance. Position is computed and set in code-behind
+       (RecordingHud.axaml.cs's PositionAtBottomRightOfPrimaryScreen) each time the HUD
+       is shown, since screen geometry can only be read once the window exists.
+       No language chip (§3.1's own explicit scope decision — no classifier exists). -->
+  <Border Background="{DynamicResource Surface}"
+          BorderBrush="{DynamicResource Border}"
+          BorderThickness="{DynamicResource BorderThicknessHairline}"
+          CornerRadius="{DynamicResource RadiusMd}"
+          BoxShadow="{DynamicResource ShadowRaised}"
+          Padding="{DynamicResource SpaceMdThickness}">
+    <StackPanel Spacing="{DynamicResource SpaceSm}">
+
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Grid.Column="0" Classes="Caption" Text="Recording"
+                   Foreground="{DynamicResource TextSecondary}" />
+        <TextBlock Grid.Column="1" x:Name="ElapsedLabel" Classes="Caption" Text="0:00"
+                   Foreground="{DynamicResource TextSecondary}" />
+      </Grid>
+
+      <!-- Live level meter: a simple two-Border fill bar. The outer Border is the
+           fixed-width "track"; the inner Border's Width is set directly in
+           code-behind from DbfsToFillRatio's 0-1 result (no converter needed for
+           a single derived pixel width). -->
+      <Border Width="{DynamicResource SizeHudMeterWidth}"
+              Height="{DynamicResource SizeHudMeterHeight}"
+              Background="{DynamicResource Border}"
+              CornerRadius="{DynamicResource RadiusSm}"
+              HorizontalAlignment="Left">
+        <Border x:Name="LevelFill"
+                Width="0"
+                HorizontalAlignment="Left"
+                Background="{DynamicResource Success}"
+                CornerRadius="{DynamicResource RadiusSm}" />
+      </Border>
+
+    </StackPanel>
+  </Border>
+
+</Window>

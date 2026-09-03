@@ -1,0 +1,13 @@
+
+device_index,device_name,host_api,default_sample_rate,supports_16k_mono_f32,is_default_input,openMs_p50,openMs_p95,startMs_p50,startMs_p95,firstSampleMs_p50,firstSampleMs_p95,failed_trials,total_trials
+0,"Microsoft Sound Mapper - Input",MME,44100,True,False,17.7,18.9,0.4,0.4,57.3,59.4,0,20
+1,"Microphone (streamplify Mic.)",MME,44100,True,True,16.9,17.9,0.2,0.3,56.2,58.3,0,20
+4,"Primary Sound Capture Driver",Windows DirectSound,44100,True,False,17.3,17.9,0.5,0.6,78.2,78.7,0,20
+5,"Microphone (streamplify Mic.)",Windows DirectSound,44100,True,False,17.3,17.8,0.5,0.5,78.4,78.8,0,20
+9,"Microphone (streamplify Mic.)",Windows WASAPI,48000,False,False,17.0,17.7,0.8,1.2,,,20,20
+10,"Stereo Mix (Realtek HD Audio Stereo input)",Windows WDM-KS,48000,False,False,,,,,,,20,20
+11,"Line In (Realtek HD Audio Line input)",Windows WDM-KS,44100,False,False,,,,,,,20,20
+12,"Microphone (Realtek HD Audio Mic input)",Windows WDM-KS,44100,False,False,,,,,,,20,20
+17,"Headset (@System32\drivers\bthhfenum.sys,#2;%1 Hands-Free%0
+;(Nothing Ear (open)))",Windows WDM-KS,8000,False,False,,,,,,,20,20
+19,"Microphone (streamplify Mic.)",Windows WDM-KS,48000,False,False,0.2,0.7,5.0,6.4,,,20,20

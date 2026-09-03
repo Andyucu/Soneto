@@ -1,0 +1,34 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="360" d:DesignHeight="180"
+        x:Class="Soneto.App.Views.ConfirmDialog"
+        Width="{DynamicResource SizeConfirmDialogWidth}"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource Surface}">
+
+  <!-- Phase 3 item 10 (§3.14): a small, reusable confirmation dialog — built once and reused
+       for the panic-wipe control (and any future destructive action that needs a REAL second
+       confirming action, not a single accidental-click delete). Every color/spacing value is a
+       DynamicResource binding, matching every prior view's discipline. -->
+  <StackPanel Margin="{DynamicResource SpaceLgThickness}" Spacing="{DynamicResource SpaceMd}">
+
+    <TextBlock x:Name="TitleText" Classes="Body SectionTitle"
+               Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+
+    <TextBlock x:Name="MessageText" Classes="Caption"
+               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+
+    <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SpaceSm}"
+                HorizontalAlignment="Right">
+      <Button x:Name="CancelButton" Content="Cancel" />
+      <Button x:Name="ConfirmButton" Content="Confirm"
+              Background="{DynamicResource Danger}" Foreground="{DynamicResource Surface}" />
+    </StackPanel>
+
+  </StackPanel>
+
+</Window>

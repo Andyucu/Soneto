@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Soneto.Core/Soneto.Core.csproj" />
+    <Project Path="src/Soneto.Platform.Windows/Soneto.Platform.Windows.csproj" />
+    <Project Path="src/Soneto.Platform.Linux/Soneto.Platform.Linux.csproj" />
+    <Project Path="src/Soneto.Composition/Soneto.Composition.csproj" />
+    <Project Path="src/Soneto.App/Soneto.App.csproj" />
+    <Project Path="src/Soneto.Daemon/Soneto.Daemon.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Soneto.Core.Tests/Soneto.Core.Tests.csproj" />
+    <Project Path="tests/Soneto.App.Tests/Soneto.App.Tests.csproj" />
+    <Project Path="tests/Soneto.Platform.Windows.Tests/Soneto.Platform.Windows.Tests.csproj" />
+    <Project Path="tests/Soneto.Platform.Linux.Tests/Soneto.Platform.Linux.Tests.csproj" />
+  </Folder>
+  <Folder Name="/spikes/">
+    <Project Path="spikes/s1-asr/s1-asr.csproj" />
+    <Project Path="spikes/s1b-audio/s1b-audio.csproj" />
+    <Project Path="spikes/s3-hotkey-win/s3-hotkey-win.csproj" />
+    <Project Path="spikes/s4-inject-win/s4-inject-win.csproj" />
+  </Folder>
+</Solution>

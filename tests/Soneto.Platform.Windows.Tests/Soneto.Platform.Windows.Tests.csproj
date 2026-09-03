@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- Same default-exclusion convention as Soneto.Core.Tests: a bare "dotnet test" run
+         excludes Category=Hardware (needs a live keyboard/human) but DOES run
+         EventSimulator-based tests, since S3 already proved those work headlessly. -->
+    <VSTestTestCaseFilter Condition="'$(VSTestTestCaseFilter)' == ''">Category!=Hardware</VSTestTestCaseFilter>
+    <!-- Test-only: System.Windows.Automation (UIAutomationClient) for
+         WindowsTextInjectorNotepadSelfCheckTests' read-back of Notepad's edit control
+         (GetWindowText/WM_GETTEXT don't work against modern Windows 11 Notepad's
+         UWP-hosted RichEditBox). Same rationale as spikes/s4-inject-win's own UseWPF; the
+         product code in Soneto.Platform.Windows itself takes no such dependency (raw Win32
+         P/Invoke only, per that project's csproj comment). -->
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Soneto.Core\Soneto.Core.csproj" />
+    <ProjectReference Include="..\..\src\Soneto.Platform.Windows\Soneto.Platform.Windows.csproj" />
+  </ItemGroup>
+
+</Project>

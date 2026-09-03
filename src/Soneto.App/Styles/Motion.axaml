@@ -1,0 +1,19 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:easings="clr-namespace:Avalonia.Animation.Easings;assembly=Avalonia.Base">
+
+  <!-- Motion tokens (§3.7): transition durations/easings (window open, tray-to-window
+       restore, the future recording HUD's fade-in/out) — a small, consistent set, not
+       per-view ad-hoc durations. TimeSpan durations are used directly by Avalonia's
+       Transitions (e.g. <DoubleTransition Duration="{DynamicResource MotionFast}" />);
+       the Easing objects are provided as ready-to-use instances so a view never has to
+       construct one inline. -->
+
+  <x:TimeSpan x:Key="MotionFast">0:0:0.1</x:TimeSpan>
+  <x:TimeSpan x:Key="MotionNormal">0:0:0.2</x:TimeSpan>
+  <x:TimeSpan x:Key="MotionSlow">0:0:0.35</x:TimeSpan>
+
+  <easings:CubicEaseInOut x:Key="MotionEaseStandard" />
+  <easings:CubicEaseOut x:Key="MotionEaseOut" />
+
+</ResourceDictionary>

@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- Multi-targeted so the same project builds and runs on both OSes, mirroring
+         Soneto.Daemon.csproj's exact TFM shape (§3.3/item 3's own ordering decision:
+         Soneto.App is created HERE, in item 3, not deferred to item 4 — see
+         Docs/soneto-implementation-plan-phase3.md §3.16 item 3's row for why). -->
+    <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <!-- The SDK does NOT auto generate a bare "WINDOWS" preprocessor symbol for the
+       net10.0-windows TFM (it generates NET10_0_WINDOWS instead), confirmed directly in
+       Soneto.Daemon.csproj (see that file's own comment for the exact repro). Copied
+       verbatim here since this project has the same multi-target shape and will need the
+       same symbol once item 4 adds Windows-specific composition wiring. -->
+  <PropertyGroup Condition="'$(TargetFramework)'=='net10.0-windows'">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Standard Avalonia 11.x-generation desktop-app package set (actually 12.0.4, the
+         current latest stable per `dotnet new avalonia.app` at the time this item was
+         built — pinned explicitly, not left floating). -->
+    <PackageReference Include="Avalonia" Version="12.0.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.0.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.4" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.4" />
+    <!-- Item 5 (§3.9's sub-task A): a minimal logging setup so real-pipeline-startup
+         failures are at least visible during development — a bare console provider via
+         Microsoft.Extensions.Logging, deliberately NOT a full Serilog setup like
+         Soneto.Daemon's (disproportionate for this item, see the work item's own
+         instruction). -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Assets/ (item 4): the placeholder tray icon .ico lives here — see Assets/README.md
+         for why it's a placeholder, not real branding. Avalonia does NOT auto-include an
+         Assets folder as AvaloniaResource the way the stock template's generated .csproj
+         does; this project's .csproj was hand-adapted (see item 3's row), so the include
+         is added explicitly here rather than assumed. -->
+    <AvaloniaResource Include="Assets\*.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Item 6 (§3.10): Soneto.App.Tests needs to construct HistoryViewModel via its internal
+         test-facing constructor (which lets a test replace the Avalonia-Dispatcher-dependent
+         UI-thread-marshaling/debounce mechanisms with synchronous stand-ins, see that
+         constructor's own doc comment) without exposing that constructor publicly. -->
+    <InternalsVisibleTo Include="Soneto.App.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Soneto.Core\Soneto.Core.csproj" />
+    <!-- Item 5 (§3.9's sub-task A, the "first real pipeline wiring" ordering decision —
+         see this item's own doc-comment note in App.axaml.cs/PipelineHost.cs): Soneto.App
+         now calls the same Soneto.Composition.DaemonComposition entry points
+         Soneto.Daemon already does, mirroring that project's own reference shape exactly
+         (Soneto.Platform.Linux referenced unconditionally, Soneto.Platform.Windows only
+         for the net10.0-windows TFM). -->
+    <ProjectReference Include="..\Soneto.Composition\Soneto.Composition.csproj" />
+    <ProjectReference Include="..\Soneto.Platform.Linux\Soneto.Platform.Linux.csproj" />
+    <ProjectReference Include="..\Soneto.Platform.Windows\Soneto.Platform.Windows.csproj" Condition="'$(TargetFramework)' == 'net10.0-windows'" />
+  </ItemGroup>
+
+</Project>

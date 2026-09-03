@@ -1,0 +1,33 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Soneto.App.App"
+             RequestedThemeVariant="Default">
+             <!-- "Default" follows the OS theme variant; the kitchen-sink view (item 3)
+                  adds a runtime toggle that overrides this at the Application level so
+                  both the light and dark Colors.axaml variants can be visually confirmed
+                  in one running app without editing OS settings/restarting. -->
+
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <!-- Design tokens (§3.7) — wired application-wide so every current and future
+             view can pull from them via {DynamicResource ...}. Colors.axaml carries
+             its own ThemeDictionaries (Light/Dark); the other four are plain flat
+             dictionaries with no theme-variant split. -->
+        <ResourceInclude Source="avares://Soneto.App/Styles/Colors.axaml" />
+        <ResourceInclude Source="avares://Soneto.App/Styles/Spacing.axaml" />
+        <ResourceInclude Source="avares://Soneto.App/Styles/Elevation.axaml" />
+        <ResourceInclude Source="avares://Soneto.App/Styles/Motion.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme />
+    <!-- Typography.axaml is a Styles file (TextBlock style classes built from type-
+         scale resources), not a plain ResourceDictionary, so it's merged here rather
+         than into Application.Resources' MergedDictionaries above. -->
+    <StyleInclude Source="avares://Soneto.App/Styles/Typography.axaml" />
+  </Application.Styles>
+
+</Application>

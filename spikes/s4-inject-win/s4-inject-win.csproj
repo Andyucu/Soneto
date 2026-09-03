@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>s4_inject_win</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <PlatformTarget>x64</PlatformTarget>
+    <!-- WinForms: System.Drawing.Common (bitmap synth, screen capture) + SendKeys.
+         WPF: System.Windows.Automation (UIAutomationClient) for Notepad text read-back.
+         Both are throwaway-spike conveniences; product code (Soneto.Platform.Windows)
+         must not take these dependencies. See README "Why WinForms/WPF here". -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,161 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
+             x:Class="Soneto.App.Views.KitchenSinkView"
+             Background="{DynamicResource Background}">
+
+  <!-- Item 3's scratch "kitchen sink" view (§3.7): renders every design token so the
+       "every view pulls from tokens, never a hardcoded hex color or magic-number
+       margin" discipline is established here first, as the precedent, rather than an
+       afterthought. Every color/spacing/elevation/motion value below comes from
+       {DynamicResource ...} — zero hardcoded hex colors or magic-number margins
+       anywhere in this file. -->
+
+  <UserControl.Styles>
+    <!-- Local-only styles for the two motion demos below; scoped to this view so
+         they don't leak into the app-wide Styles files, which is where a REAL
+         reusable interaction pattern would belong once one exists. -->
+    <Style Selector="Button.HoverFade">
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="{DynamicResource MotionFast}" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Button.HoverFade:pointerover">
+      <Setter Property="Opacity" Value="0.6" />
+    </Style>
+  </UserControl.Styles>
+
+  <Border x:Name="RootFade" Opacity="0">
+    <Border.Transitions>
+      <Transitions>
+        <DoubleTransition Property="Opacity" Duration="{DynamicResource MotionNormal}" />
+      </Transitions>
+    </Border.Transitions>
+
+    <ScrollViewer Padding="{DynamicResource SpaceXlThickness}">
+      <StackPanel Spacing="{DynamicResource SpaceXl}">
+
+        <TextBlock Classes="Display" Text="Soneto design tokens" Foreground="{DynamicResource TextPrimary}" />
+        <TextBlock Classes="Body" Text="Kitchen sink — item 3, Phase 3. Every value below is pulled from Styles/*.axaml via DynamicResource." Foreground="{DynamicResource TextSecondary}" />
+
+        <Button x:Name="ThemeToggleButton" Content="Toggle light / dark theme" Click="OnToggleThemeClick"
+                Padding="{DynamicResource SpaceMdThickness}" />
+
+        <!-- Colors -->
+        <StackPanel Spacing="{DynamicResource SpaceMd}">
+          <TextBlock Classes="Title" Text="Colors" Foreground="{DynamicResource TextPrimary}" />
+          <WrapPanel>
+
+            <StackPanel Spacing="{DynamicResource SpaceXs}" Margin="{DynamicResource SpaceLgThickness}">
+              <Border Width="{DynamicResource SizeSwatchWidth}" Height="{DynamicResource SizeSwatchHeight}" CornerRadius="{DynamicResource RadiusSm}" Background="{DynamicResource Background}" BorderBrush="{DynamicResource Border}" BorderThickness="{DynamicResource BorderThicknessHairline}" />
+              <TextBlock Classes="Caption" Text="Background" Foreground="{DynamicResource TextSecondary}" />
+            </StackPanel>
+
+            <StackPanel Spacing="{DynamicResource SpaceXs}" Margin="{DynamicResource SpaceLgThickness}">
+              <Border Width="{DynamicResource SizeSwatchWidth}" Height="{DynamicResource SizeSwatchHeight}" CornerRadius="{DynamicResource RadiusSm}" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Border}" BorderThickness="{DynamicResource BorderThicknessHairline}" />
+              <TextBlock Classes="Caption" Text="Surface" Foreground="{DynamicResource TextSecondary}" />
+            </StackPanel>
+
+            <StackPanel Spacing="{DynamicResource SpaceXs}" Margin="{DynamicResource SpaceLgThickness}">
+              <Border Width="{DynamicResource SizeSwatchWidth}" Height="{DynamicResource SizeSwatchHeight}" CornerRadius="{DynamicResource RadiusSm}" Background="{DynamicResource TextPrimary}" />
+              <TextBlock Classes="Caption" Text="TextPrimary" Foreground="{DynamicResource TextSecondary}" />
+            </StackPanel>
+
+            <StackPanel Spacing="{DynamicResource SpaceXs}" Margin="{DynamicResource SpaceLgThickness}">
+              <Border Width="{DynamicResource SizeSwatchWidth}" Height="{DynamicResource SizeSwatchHeight}" CornerRadius="{DynamicResource RadiusSm}" Background="{DynamicResource TextSecondary}" />
+              <TextBlock Classes="Caption" Text="TextSecondary" Foreground="{DynamicResource TextSecondary}" />
+            </StackPanel>
+
+            <StackPanel Spacing="{DynamicResource SpaceXs}" Margin="{DynamicResource SpaceLgThickness}">
+              <Border Width="{DynamicResource SizeSwatchWidth}" Height="{DynamicResource SizeSwatchHeight}" CornerRadius="{DynamicResource RadiusSm}" Background="{DynamicResource Accent}" />
+              <TextBlock Classes="Caption" Text="Accent" Foreground="{DynamicResource TextSecondary}" />
+            </StackPanel>
+
+            <StackPanel Spacing="{DynamicResource SpaceXs}" Margin="{DynamicResource SpaceLgThickness}">
+              <Border Width="{DynamicResource SizeSwatchWidth}" Height="{DynamicResource SizeSwatchHeight}" CornerRadius="{DynamicResource RadiusSm}" Background="{DynamicResource Success}" />
+              <TextBlock Classes="Caption" Text="Success" Foreground="{DynamicResource TextSecondary}" />
+            </StackPanel>
+
+            <StackPanel Spacing="{DynamicResource SpaceXs}" Margin="{DynamicResource SpaceLgThickness}">
+              <Border Width="{DynamicResource SizeSwatchWidth}" Height="{DynamicResource SizeSwatchHeight}" CornerRadius="{DynamicResource RadiusSm}" Background="{DynamicResource Warning}" />
+              <TextBlock Classes="Caption" Text="Warning" Foreground="{DynamicResource TextSecondary}" />
+            </StackPanel>
+
+            <StackPanel Spacing="{DynamicResource SpaceXs}" Margin="{DynamicResource SpaceLgThickness}">
+              <Border Width="{DynamicResource SizeSwatchWidth}" Height="{DynamicResource SizeSwatchHeight}" CornerRadius="{DynamicResource RadiusSm}" Background="{DynamicResource Danger}" />
+              <TextBlock Classes="Caption" Text="Danger" Foreground="{DynamicResource TextSecondary}" />
+            </StackPanel>
+
+            <StackPanel Spacing="{DynamicResource SpaceXs}" Margin="{DynamicResource SpaceLgThickness}">
+              <Border Width="{DynamicResource SizeSwatchWidth}" Height="{DynamicResource SizeSwatchHeight}" CornerRadius="{DynamicResource RadiusSm}" Background="{DynamicResource Border}" />
+              <TextBlock Classes="Caption" Text="Border" Foreground="{DynamicResource TextSecondary}" />
+            </StackPanel>
+
+          </WrapPanel>
+        </StackPanel>
+
+        <!-- Typography -->
+        <StackPanel Spacing="{DynamicResource SpaceMd}">
+          <TextBlock Classes="Title" Text="Typography" Foreground="{DynamicResource TextPrimary}" />
+          <StackPanel Spacing="{DynamicResource SpaceSm}">
+            <TextBlock Classes="Display" Text="Display — the quick brown fox" Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock Classes="Title" Text="Title — the quick brown fox" Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock Classes="Body" Text="Body — the quick brown fox jumps over the lazy dog." Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock Classes="Caption" Text="Caption — the quick brown fox jumps over the lazy dog." Foreground="{DynamicResource TextSecondary}" />
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Spacing -->
+        <StackPanel Spacing="{DynamicResource SpaceMd}">
+          <TextBlock Classes="Title" Text="Spacing" Foreground="{DynamicResource TextPrimary}" />
+          <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SpaceXs}">
+            <Border Width="{DynamicResource SpaceXs}" Height="{DynamicResource SizeDemoBarHeight}" Background="{DynamicResource Accent}" />
+            <Border Width="{DynamicResource SpaceSm}" Height="{DynamicResource SizeDemoBarHeight}" Background="{DynamicResource Accent}" />
+            <Border Width="{DynamicResource SpaceMd}" Height="{DynamicResource SizeDemoBarHeight}" Background="{DynamicResource Accent}" />
+            <Border Width="{DynamicResource SpaceLg}" Height="{DynamicResource SizeDemoBarHeight}" Background="{DynamicResource Accent}" />
+            <Border Width="{DynamicResource SpaceXl}" Height="{DynamicResource SizeDemoBarHeight}" Background="{DynamicResource Accent}" />
+            <Border Width="{DynamicResource SpaceXxl}" Height="{DynamicResource SizeDemoBarHeight}" Background="{DynamicResource Accent}" />
+          </StackPanel>
+          <TextBlock Classes="Caption" Text="SpaceXs (4) through SpaceXxl (32), left to right" Foreground="{DynamicResource TextSecondary}" />
+        </StackPanel>
+
+        <!-- Elevation -->
+        <StackPanel Spacing="{DynamicResource SpaceMd}">
+          <TextBlock Classes="Title" Text="Elevation" Foreground="{DynamicResource TextPrimary}" />
+          <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SpaceLg}">
+            <Border Background="{DynamicResource Surface}" CornerRadius="{DynamicResource RadiusSm}" BoxShadow="{DynamicResource ShadowCard}"
+                    Padding="{DynamicResource SpaceLgThickness}" Width="{DynamicResource SizeDemoCardWidth}">
+              <StackPanel Spacing="{DynamicResource SpaceXs}">
+                <TextBlock Classes="Body" Text="RadiusSm + ShadowCard" Foreground="{DynamicResource TextPrimary}" />
+                <TextBlock Classes="Caption" Text="A standard card/panel." Foreground="{DynamicResource TextSecondary}" />
+              </StackPanel>
+            </Border>
+            <Border Background="{DynamicResource Surface}" CornerRadius="{DynamicResource RadiusLg}" BoxShadow="{DynamicResource ShadowRaised}"
+                    Padding="{DynamicResource SpaceLgThickness}" Width="{DynamicResource SizeDemoCardWidth}">
+              <StackPanel Spacing="{DynamicResource SpaceXs}">
+                <TextBlock Classes="Body" Text="RadiusLg + ShadowRaised" Foreground="{DynamicResource TextPrimary}" />
+                <TextBlock Classes="Caption" Text="A raised/floating element." Foreground="{DynamicResource TextSecondary}" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Motion -->
+        <StackPanel Spacing="{DynamicResource SpaceMd}">
+          <TextBlock Classes="Title" Text="Motion" Foreground="{DynamicResource TextPrimary}" />
+          <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SpaceLg}">
+            <Button Classes="HoverFade" Content="Hover me (MotionFast fade)" Padding="{DynamicResource SpaceMdThickness}" />
+            <TextBlock Classes="Body" Text="This whole page also fades in on load using MotionNormal." Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" />
+          </StackPanel>
+        </StackPanel>
+
+      </StackPanel>
+    </ScrollViewer>
+  </Border>
+
+</UserControl>

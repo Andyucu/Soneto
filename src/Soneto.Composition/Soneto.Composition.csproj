@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Multi-targeted so the same project builds and runs on both OSes: the
+         Windows platform project targets net10.0-windows and can only be referenced
+         from a compatible (net10.0-windows) target framework here; the Linux
+         platform project is plain net10.0 and is fine to reference from both. -->
+    <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- The SDK does NOT auto generate a bare "WINDOWS" preprocessor symbol for the
+       net10.0-windows TFM (it generates NET10_0_WINDOWS instead), confirmed directly via
+       "dotnet build -f net10.0-windows -getProperty:DefineConstants", which returned only
+       "TRACE;DEBUG" before this fix in Soneto.Daemon.csproj (see that file's own comment
+       for the full story). Copied verbatim here since this project has no WINDOWS-gated
+       code of its own yet, but keeping the TFM/DefineConstants shape identical to
+       Soneto.Daemon avoids surprises if that ever changes. -->
+  <PropertyGroup Condition="'$(TargetFramework)'=='net10.0-windows'">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Soneto.Core\Soneto.Core.csproj" />
+    <ProjectReference Include="..\Soneto.Platform.Linux\Soneto.Platform.Linux.csproj" />
+    <ProjectReference Include="..\Soneto.Platform.Windows\Soneto.Platform.Windows.csproj" Condition="'$(TargetFramework)' == 'net10.0-windows'" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="220" d:DesignHeight="32"
+             x:Class="Soneto.App.Controls.KeyCaptureField">
+
+  <!-- Phase 3 item 8 (§3.12): a small, genuinely reusable "click to capture a key" control —
+       an ordinary, in-window Button that listens for its OWN KeyDown event while focused/in
+       "capturing" mode. This is safe, ordinary keyboard input local to this control, NOT a
+       global SharpHook registration — nothing like the real global hotkey mechanism.
+       Reused verbatim for both the primary Hotkey rebind field and the second-hotkey
+       language-profile-hint capture field, per this item's own "build it once" instruction. -->
+  <Button x:Name="CaptureButton"
+          Click="OnCaptureButtonClick"
+          KeyDown="OnCaptureButtonKeyDown"
+          HorizontalContentAlignment="Left" />
+
+</UserControl>

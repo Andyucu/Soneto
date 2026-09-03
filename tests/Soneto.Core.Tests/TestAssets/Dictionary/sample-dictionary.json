@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "type": "vocabularyTerm",
+      "id": "vocab-webmethods",
+      "term": "webMethods"
+    },
+    {
+      "type": "vocabularyTerm",
+      "id": "vocab-sonarqube",
+      "term": "SonarQube",
+      "enabled": false
+    },
+    {
+      "type": "correctionPair",
+      "id": "corr-cloud-code",
+      "from": "cloud code",
+      "to": "Claude Code"
+    },
+    {
+      "type": "correctionPair",
+      "id": "corr-web-methods",
+      "from": "web methods",
+      "to": "webMethods"
+    },
+    {
+      "type": "regexRule",
+      "id": "regex-is-number",
+      "pattern": "\\bIS (\\d+)\\b",
+      "replacement": "IS $1"
+    },
+    {
+      "type": "spokenCommand",
+      "id": "cmd-new-paragraph",
+      "phrase": "new paragraph",
+      "emits": "\n\n"
+    },
+    {
+      "type": "spokenCommand",
+      "id": "cmd-linie-noua",
+      "phrase": "linie nouă",
+      "emits": "\n"
+    },
+    {
+      "type": "perAppOverride",
+      "id": "app-terminal",
+      "processName": "wt.exe",
+      "autoCapitalize": false,
+      "trailingPunctuation": false
+    }
+  ]
+}

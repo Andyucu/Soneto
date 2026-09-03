@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    { "type": "vocabularyTerm", "id": "seed.vocab.webmethods", "term": "webMethods" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.integration-server", "term": "Integration Server" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.trading-networks", "term": "Trading Networks" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.enterprise-gateway", "term": "Enterprise Gateway" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.universal-messaging", "term": "Universal Messaging" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.mft", "term": "MFT" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.goanywhere", "term": "GoAnywhere" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.as2", "term": "AS2" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.ediint", "term": "EDIINT" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.informatica", "term": "Informatica" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.powercenter", "term": "PowerCenter" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.idmc", "term": "IDMC" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.businessobjects", "term": "BusinessObjects" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.loadrunner", "term": "LoadRunner" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.sonarqube", "term": "SonarQube" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.querysurge", "term": "QuerySurge" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.spotfire", "term": "Spotfire" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.proxmox", "term": "Proxmox" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.unraid", "term": "Unraid" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.avalonia", "term": "Avalonia" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.keystore", "term": "keystore" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.truststore", "term": "truststore" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.pkcs12", "term": "PKCS#12" },
+    { "type": "vocabularyTerm", "id": "seed.vocab.jks", "term": "JKS" },
+
+    { "type": "spokenCommand", "id": "seed.spoken-command.en.new-paragraph", "phrase": "new paragraph", "emits": "\n\n" },
+    { "type": "spokenCommand", "id": "seed.spoken-command.ro.paragraf-nou", "phrase": "paragraf nou", "emits": "\n\n" },
+    { "type": "spokenCommand", "id": "seed.spoken-command.en.new-line", "phrase": "new line", "emits": "\n" },
+    { "type": "spokenCommand", "id": "seed.spoken-command.ro.linie-noua", "phrase": "linie nouă", "emits": "\n" }
+  ]
+}

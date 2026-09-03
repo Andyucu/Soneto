@@ -1,0 +1,37 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Semantic color palette (§3.7). Both light and dark variants are provided from
+       the start via Avalonia's ThemeDictionaries, keyed by ThemeVariant.Light/Dark —
+       not a single palette retrofitted for dark mode later. Every entry is a
+       SolidColorBrush (not a raw Color) so views can bind directly via
+       {DynamicResource ...} with no extra converter. -->
+  <ResourceDictionary.ThemeDictionaries>
+
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="Background" Color="#FFF5F5F7" />
+      <SolidColorBrush x:Key="Surface" Color="#FFFFFFFF" />
+      <SolidColorBrush x:Key="TextPrimary" Color="#FF1A1A1E" />
+      <SolidColorBrush x:Key="TextSecondary" Color="#FF5A5A63" />
+      <SolidColorBrush x:Key="Accent" Color="#FF3D6BFF" />
+      <SolidColorBrush x:Key="Success" Color="#FF1E8E3E" />
+      <SolidColorBrush x:Key="Warning" Color="#FFB8860B" />
+      <SolidColorBrush x:Key="Danger" Color="#FFD32F2F" />
+      <SolidColorBrush x:Key="Border" Color="#FFDCDCE1" />
+    </ResourceDictionary>
+
+    <ResourceDictionary x:Key="Dark">
+      <SolidColorBrush x:Key="Background" Color="#FF17171A" />
+      <SolidColorBrush x:Key="Surface" Color="#FF232326" />
+      <SolidColorBrush x:Key="TextPrimary" Color="#FFEDEDEF" />
+      <SolidColorBrush x:Key="TextSecondary" Color="#FFA3A3AB" />
+      <SolidColorBrush x:Key="Accent" Color="#FF7C9BFF" />
+      <SolidColorBrush x:Key="Success" Color="#FF4CC168" />
+      <SolidColorBrush x:Key="Warning" Color="#FFE0B03D" />
+      <SolidColorBrush x:Key="Danger" Color="#FFEF5350" />
+      <SolidColorBrush x:Key="Border" Color="#FF3A3A3F" />
+    </ResourceDictionary>
+
+  </ResourceDictionary.ThemeDictionaries>
+
+</ResourceDictionary>

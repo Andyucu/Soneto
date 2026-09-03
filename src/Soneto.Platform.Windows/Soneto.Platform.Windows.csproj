@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SharpHook confirmed working in spikes/s3-hotkey-win for global hotkey capture.
+         Injection uses direct Win32 P/Invoke (SendInput, clipboard APIs) per the plan's
+         "or direct Win32 P/Invoke" alternative — confirmed working in spikes/s4-inject-win,
+         which uses its own NativeMethods.cs rather than TextCopy. No TextCopy dependency. -->
+    <PackageReference Include="SharpHook" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Soneto.Core\Soneto.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Lets Soneto.Platform.Windows.Tests reach internal-but-unit-testable types (e.g.
+         ModifierSanitizer) directly, without reflection workarounds. -->
+    <InternalsVisibleTo Include="Soneto.Platform.Windows.Tests" />
+  </ItemGroup>
+
+</Project>

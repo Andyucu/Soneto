@@ -1,0 +1,179 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Soneto.App.ViewModels"
+             xmlns:dict="using:Soneto.Core.Dictionary"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
+             x:Class="Soneto.App.Views.DictionaryEditorView"
+             x:DataType="vm:DictionaryEditorViewModel">
+
+  <!-- Item 7 (§3.11): real dictionary.json editor. Every color/spacing/corner-radius/
+       dimension value below is a DynamicResource binding, matching every prior view's
+       discipline: zero hardcoded hex colors or magic-number dimensions. -->
+  <UserControl.Styles>
+    <Style Selector="TextBlock.StatusError">
+      <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+    </Style>
+    <Style Selector="TextBlock.StatusOk">
+      <Setter Property="Foreground" Value="{DynamicResource Success}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Margin="{DynamicResource SpaceLgThickness}"
+        RowSpacing="{DynamicResource SpaceMd}">
+
+    <TextBlock Grid.Row="0" Classes="Title" Text="Dictionary"
+               Foreground="{DynamicResource TextPrimary}" />
+
+    <!-- Honest, explicit "no live rebuild" notice (item 10/Phase 2's already-documented
+         limitation): must never let the UI imply an edit is live in the current session. -->
+    <TextBlock Grid.Row="1" Classes="Caption"
+               Text="Changes are written to dictionary.json immediately, but only take effect the next time Soneto is restarted. The active dictation session does not live-reload the dictionary."
+               Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+
+    <!-- Type filter row -->
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="{DynamicResource SpaceSm}">
+      <Button Content="All" Click="OnFilterAllClick" />
+      <Button Content="Vocabulary" Click="OnFilterVocabularyClick" />
+      <Button Content="Corrections" Click="OnFilterCorrectionClick" />
+      <Button Content="Regex rules" Click="OnFilterRegexClick" />
+      <Button Content="Spoken commands" Click="OnFilterSpokenCommandClick" />
+      <Button Content="Per-app overrides" Click="OnFilterPerAppClick" />
+    </StackPanel>
+
+    <!-- Status message from the last write (success/failure/rejection reason). -->
+    <TextBlock Grid.Row="3" Classes="Body" Classes.StatusOk="{Binding !StatusIsError}"
+               Classes.StatusError="{Binding StatusIsError}"
+               Text="{Binding StatusMessage}"
+               IsVisible="{Binding StatusMessage, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+               TextWrapping="Wrap" />
+
+    <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource SpaceLg}">
+
+      <!-- Entry list + "Add new" buttons -->
+      <Grid Grid.Column="0" Width="{DynamicResource SizeDictionaryListWidth}"
+            RowDefinitions="Auto,*" RowSpacing="{DynamicResource SpaceSm}">
+
+        <WrapPanel Grid.Row="0">
+          <Button Content="+ Vocabulary" Click="OnAddVocabularyClick" />
+          <Button Content="+ Correction" Click="OnAddCorrectionClick" />
+          <Button Content="+ Regex" Click="OnAddRegexClick" />
+          <Button Content="+ Command" Click="OnAddSpokenCommandClick" />
+          <Button Content="+ Per-app" Click="OnAddPerAppClick" />
+        </WrapPanel>
+
+        <ListBox Grid.Row="1" ItemsSource="{Binding Entries}">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:DictionaryEntryRowViewModel">
+              <Border Padding="{DynamicResource SpaceSmThickness}"
+                      CornerRadius="{DynamicResource RadiusSm}"
+                      Background="{DynamicResource Surface}">
+                <StackPanel Spacing="{DynamicResource SpaceXs}">
+                  <TextBlock Classes="Caption" Text="{Binding TypeLabel}"
+                             Foreground="{DynamicResource TextSecondary}" />
+                  <TextBlock Classes="Body" Text="{Binding Summary}"
+                             Foreground="{DynamicResource TextPrimary}"
+                             TextWrapping="Wrap" />
+                  <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SpaceXs}">
+                    <Button Content="Edit" Tag="{Binding}" Click="OnEditEntryClick"
+                            IsEnabled="{Binding !$parent[UserControl].((vm:DictionaryEditorViewModel)DataContext).IsSaving}" />
+                    <Button Content="{Binding ToggleLabel}" Tag="{Binding}" Click="OnToggleEnabledClick"
+                            IsEnabled="{Binding !$parent[UserControl].((vm:DictionaryEditorViewModel)DataContext).IsSaving}" />
+                    <Button Content="Delete" Tag="{Binding}" Click="OnDeleteEntryClick"
+                            IsEnabled="{Binding !$parent[UserControl].((vm:DictionaryEditorViewModel)DataContext).IsSaving}" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Grid>
+
+      <!-- Diagnostics: entries rejected on the last load (per-entry validation failures). -->
+      <Border Grid.Column="1"
+              Background="{DynamicResource Surface}"
+              BorderBrush="{DynamicResource Border}"
+              BorderThickness="{DynamicResource BorderThicknessHairline}"
+              CornerRadius="{DynamicResource RadiusMd}"
+              Padding="{DynamicResource SpaceLgThickness}">
+        <StackPanel Spacing="{DynamicResource SpaceSm}">
+          <TextBlock Classes="Caption" Text="Rejected entries (from the last dictionary load)"
+                     Foreground="{DynamicResource TextSecondary}" />
+          <ItemsControl ItemsSource="{Binding RejectedEntries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="dict:RejectedDictionaryEntry">
+                <TextBlock Classes="Body StatusError" Text="{Binding Reason}" TextWrapping="Wrap" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <!-- Add/edit form panel -->
+      <Border Grid.Column="2" Width="{DynamicResource SizeDictionaryFormWidth}"
+              IsVisible="{Binding IsEditing}"
+              Background="{DynamicResource Surface}"
+              BorderBrush="{DynamicResource Border}"
+              BorderThickness="{DynamicResource BorderThicknessHairline}"
+              CornerRadius="{DynamicResource RadiusMd}"
+              Padding="{DynamicResource SpaceLgThickness}">
+        <StackPanel Spacing="{DynamicResource SpaceSm}">
+          <TextBlock Classes="Body" Text="{Binding EditorTitle}"
+                     Foreground="{DynamicResource TextPrimary}" />
+
+          <CheckBox Content="Enabled" IsChecked="{Binding EditingEnabled, Mode=TwoWay}" />
+
+          <!-- VocabularyTerm fields -->
+          <StackPanel IsVisible="{Binding IsEditingVocabularyTerm}" Spacing="{DynamicResource SpaceXs}">
+            <TextBlock Classes="Caption" Text="Term" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding EditingTerm, Mode=TwoWay}" />
+          </StackPanel>
+
+          <!-- CorrectionPair fields -->
+          <StackPanel IsVisible="{Binding IsEditingCorrectionPair}" Spacing="{DynamicResource SpaceXs}">
+            <TextBlock Classes="Caption" Text="From" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding EditingFrom, Mode=TwoWay}" />
+            <TextBlock Classes="Caption" Text="To" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding EditingTo, Mode=TwoWay}" />
+          </StackPanel>
+
+          <!-- RegexRule fields -->
+          <StackPanel IsVisible="{Binding IsEditingRegexRule}" Spacing="{DynamicResource SpaceXs}">
+            <TextBlock Classes="Caption" Text="Pattern (.NET regex)" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding EditingPattern, Mode=TwoWay}" />
+            <TextBlock Classes="Caption" Text="Replacement" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding EditingReplacement, Mode=TwoWay}" />
+          </StackPanel>
+
+          <!-- SpokenCommand fields -->
+          <StackPanel IsVisible="{Binding IsEditingSpokenCommand}" Spacing="{DynamicResource SpaceXs}">
+            <TextBlock Classes="Caption" Text="Phrase" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding EditingPhrase, Mode=TwoWay}" />
+            <TextBlock Classes="Caption" Text="Emits (literal output, e.g. \n\n)" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding EditingEmits, Mode=TwoWay}" />
+          </StackPanel>
+
+          <!-- PerAppOverride fields -->
+          <StackPanel IsVisible="{Binding IsEditingPerAppOverride}" Spacing="{DynamicResource SpaceXs}">
+            <TextBlock Classes="Caption StatusError"
+                       Text="Not yet active: no per-app selection mechanism exists yet (Phase 4). This entry is saved but has no effect."
+                       TextWrapping="Wrap" />
+            <TextBlock Classes="Caption" Text="Process name (e.g. wt.exe)" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding EditingProcessName, Mode=TwoWay}" />
+            <CheckBox Content="Auto-capitalize" IsChecked="{Binding EditingAutoCapitalize, Mode=TwoWay}" />
+            <CheckBox Content="Trailing punctuation" IsChecked="{Binding EditingTrailingPunctuation, Mode=TwoWay}" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="{DynamicResource SpaceSm}">
+            <Button Content="Save" Click="OnSaveClick" IsEnabled="{Binding !IsSaving}" />
+            <Button Content="Cancel" Click="OnCancelClick" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+    </Grid>
+  </Grid>
+
+</UserControl>

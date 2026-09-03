@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Item 6 (§3.10): the first real Soneto.App.Tests project, unit-testing
+         HistoryViewModel against a fake IHistoryStore per §3.15's "ViewModel logic is
+         unit-tested directly" philosophy. Deliberately plain net10.0 (not multi-targeted
+         like Soneto.App itself), mirroring Soneto.Core.Tests.csproj: this project never
+         needs a Windows-specific TFM since it never touches platform code, only
+         ViewModel-level logic and Avalonia's platform-agnostic Dispatcher/DispatcherTimer
+         types (which the tests avoid exercising for real anyway, see HistoryViewModel's
+         own internal test constructor). -->
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Package versions pinned to match Soneto.Core.Tests.csproj exactly, no reason for
+         this project's xunit/coverlet/Test.Sdk versions to drift from the established
+         pin. -->
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Soneto.App\Soneto.App.csproj" />
+    <ProjectReference Include="..\..\src\Soneto.Core\Soneto.Core.csproj" />
+  </ItemGroup>
+
+</Project>

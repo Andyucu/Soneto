@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Multi-targeted so the same project builds and runs on both OSes: the
+         Windows platform project targets net10.0-windows and can only be referenced
+         from a compatible (net10.0-windows) target framework here; the Linux
+         platform project is plain net10.0 and is fine to reference from both. -->
+    <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- The SDK does NOT auto generate a bare "WINDOWS" preprocessor symbol for the
+       net10.0-windows TFM (it generates NET10_0_WINDOWS instead), confirmed directly via
+       "dotnet build -f net10.0-windows -getProperty:DefineConstants", which returned only
+       "TRACE;DEBUG" before this fix. Every "if WINDOWS" block in Program.cs (the watch hotkey
+       and inject CLI commands from items 6/7, plus item 9's real SessionController daemon
+       wiring) was therefore silently taking the else branch on EVERY build, including the
+       Windows targeted one: dead code, not gated Windows only code, until this was added.
+       Post review fix (item 9): defines WINDOWS explicitly for the net10.0-windows TFM only. -->
+  <PropertyGroup Condition="'$(TargetFramework)'=='net10.0-windows'">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Soneto.Core\Soneto.Core.csproj" />
+    <ProjectReference Include="..\Soneto.Platform.Linux\Soneto.Platform.Linux.csproj" />
+    <ProjectReference Include="..\Soneto.Platform.Windows\Soneto.Platform.Windows.csproj" Condition="'$(TargetFramework)' == 'net10.0-windows'" />
+    <!-- Phase 3 item 0: the real end-to-end composition logic (model/capture/VAD/chain/
+         controller wiring, config/dictionary hot-reload) now lives in Soneto.Composition so
+         a future Soneto.App can call the exact same code path instead of forking it. -->
+    <ProjectReference Include="..\Soneto.Composition\Soneto.Composition.csproj" />
+  </ItemGroup>
+
+</Project>

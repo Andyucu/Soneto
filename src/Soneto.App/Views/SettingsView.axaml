@@ -1,0 +1,178 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Soneto.App.ViewModels"
+             xmlns:controls="using:Soneto.App.Controls"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="900"
+             x:Class="Soneto.App.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+  <!-- Item 8 (§3.12): the real Settings page. Every color/spacing/dimension value below is a
+       DynamicResource binding, matching every prior view's discipline: zero hardcoded hex
+       colors or magic-number dimensions. Save UX: ONE "Save settings" button for the whole
+       page (see SettingsViewModel's own doc comment for why, vs. per-field live-write or
+       per-section Save). -->
+  <UserControl.Styles>
+    <Style Selector="TextBlock.StatusError">
+      <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+    </Style>
+    <Style Selector="TextBlock.StatusOk">
+      <Setter Property="Foreground" Value="{DynamicResource Success}" />
+    </Style>
+    <Style Selector="TextBlock.SectionTitle">
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+      <Setter Property="Margin" Value="0,0,0,0" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer>
+    <Grid RowDefinitions="Auto,Auto,Auto" Margin="{DynamicResource SpaceLgThickness}"
+          RowSpacing="{DynamicResource SpaceMd}">
+
+      <TextBlock Grid.Row="0" Classes="Title" Text="Settings"
+                 Foreground="{DynamicResource TextPrimary}" />
+
+      <!-- Status message from the last save attempt. -->
+      <TextBlock Grid.Row="1" Classes="Body" Classes.StatusOk="{Binding !StatusIsError}"
+                 Classes.StatusError="{Binding StatusIsError}"
+                 Text="{Binding StatusMessage}"
+                 IsVisible="{Binding StatusMessage, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                 TextWrapping="Wrap" />
+
+      <!-- Post-review fix: the whole form (not just the Save button) is disabled while a
+           save is settling, so a concurrent edit to a DIFFERENT field can't be silently
+           clobbered by RefreshFromCurrent's own write-then-settle refresh (see
+           SettingsViewModel's own doc comment for the full race this prevents). -->
+      <StackPanel Grid.Row="2" Spacing="{DynamicResource SpaceLg}" IsEnabled="{Binding !IsSaving}">
+
+        <!-- Hotkey section -->
+        <Border Background="{DynamicResource Surface}"
+                BorderBrush="{DynamicResource Border}"
+                BorderThickness="{DynamicResource BorderThicknessHairline}"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="{DynamicResource SpaceLgThickness}">
+          <StackPanel Spacing="{DynamicResource SpaceSm}">
+            <TextBlock Classes="Body SectionTitle" Text="Hotkey" />
+            <TextBlock Classes="Caption" Text="Trigger key" Foreground="{DynamicResource TextSecondary}" />
+            <controls:KeyCaptureField x:Name="HotkeyKeyField" CapturedKey="{Binding HotkeyKey, Mode=TwoWay}" />
+            <CheckBox Content="Suppress the key from reaching other applications while held"
+                      IsChecked="{Binding HotkeySuppress, Mode=TwoWay}" />
+          </StackPanel>
+        </Border>
+
+        <!-- ASR section -->
+        <Border Background="{DynamicResource Surface}"
+                BorderBrush="{DynamicResource Border}"
+                BorderThickness="{DynamicResource BorderThicknessHairline}"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="{DynamicResource SpaceLgThickness}">
+          <StackPanel Spacing="{DynamicResource SpaceSm}">
+            <TextBlock Classes="Body SectionTitle" Text="ASR" />
+            <TextBlock Classes="Caption" Text="Model directory override (blank = auto-resolve)" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding AsrModelDir, Mode=TwoWay}" />
+            <TextBlock Classes="Caption" Text="Thread count" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding AsrNumThreadsText, Mode=TwoWay}" />
+            <TextBlock Classes="Caption" Text="Decoding method" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding AsrDecodingMethod, Mode=TwoWay}" />
+          </StackPanel>
+        </Border>
+
+        <!-- Audio section -->
+        <Border Background="{DynamicResource Surface}"
+                BorderBrush="{DynamicResource Border}"
+                BorderThickness="{DynamicResource BorderThicknessHairline}"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="{DynamicResource SpaceLgThickness}">
+          <StackPanel Spacing="{DynamicResource SpaceSm}">
+            <TextBlock Classes="Body SectionTitle" Text="Audio" />
+            <TextBlock Classes="Caption" Text="Capture mode" Foreground="{DynamicResource TextSecondary}" />
+            <ComboBox ItemsSource="{Binding CaptureModeOptions}" SelectedItem="{Binding AudioCaptureMode, Mode=TwoWay}" />
+            <TextBlock Classes="Caption"
+                       Text="Device Id (blank = system default; a real device picker is a future item — see Docs/soneto-implementation-plan-phase3.md item 8's write-up)"
+                       Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+            <TextBox Text="{Binding AudioDeviceId, Mode=TwoWay}" />
+            <TextBlock Classes="Caption" Text="VAD threshold (0.0-1.0)" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding VadThresholdText, Mode=TwoWay}" />
+            <TextBlock Classes="Caption" Text="VAD min silence (ms)" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding VadMinSilenceMsText, Mode=TwoWay}" />
+            <TextBlock Classes="Caption" Text="VAD min speech (ms)" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding VadMinSpeechMsText, Mode=TwoWay}" />
+          </StackPanel>
+        </Border>
+
+        <!-- Injection section -->
+        <Border Background="{DynamicResource Surface}"
+                BorderBrush="{DynamicResource Border}"
+                BorderThickness="{DynamicResource BorderThicknessHairline}"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="{DynamicResource SpaceLgThickness}">
+          <StackPanel Spacing="{DynamicResource SpaceSm}">
+            <TextBlock Classes="Body SectionTitle" Text="Injection" />
+            <TextBlock Classes="Caption" Text="Method" Foreground="{DynamicResource TextSecondary}" />
+            <ComboBox ItemsSource="{Binding InjectionMethodOptions}" SelectedItem="{Binding InjectionMethod, Mode=TwoWay}" />
+            <TextBlock Classes="Caption" Text="Paste chord" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding InjectionPasteChord, Mode=TwoWay}" />
+            <TextBlock Classes="Caption" Text="Clipboard policy" Foreground="{DynamicResource TextSecondary}" />
+            <ComboBox ItemsSource="{Binding ClipboardPolicyOptions}" SelectedItem="{Binding InjectionClipboardPolicy, Mode=TwoWay}" />
+          </StackPanel>
+        </Border>
+
+        <!-- Language profile binding section — the deliberately scope-reduced deliverable.
+             See LanguageProfileConfig's own doc comment (Soneto.Core) and this project's
+             docs for the full, user-approved reasoning (SharpHook's single-hook-instance
+             limitation on this machine). -->
+        <Border Background="{DynamicResource Surface}"
+                BorderBrush="{DynamicResource Border}"
+                BorderThickness="{DynamicResource BorderThicknessHairline}"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="{DynamicResource SpaceLgThickness}">
+          <StackPanel Spacing="{DynamicResource SpaceSm}">
+            <TextBlock Classes="Body SectionTitle" Text="Language profile binding" />
+            <TextBlock Classes="Caption StatusError" TextWrapping="Wrap"
+                       Text="Not yet active — captured for a future phase. This second hotkey is saved but nothing today reads it or switches dictionaries/languages when it is pressed." />
+            <TextBlock Classes="Caption" Text="Secondary trigger key" Foreground="{DynamicResource TextSecondary}" />
+            <controls:KeyCaptureField x:Name="LanguageProfileKeyField" CapturedKey="{Binding LanguageProfileSecondaryTriggerKey, Mode=TwoWay}" />
+          </StackPanel>
+        </Border>
+
+        <Button Content="Save settings" Click="OnSaveClick" IsEnabled="{Binding !IsSaving}" />
+
+        <!-- Data & privacy section (item 10, §3.14). Debug audio retention/history auto-delete
+             are saved via the same "Save settings" button above; panic wipe is its own,
+             separately-confirmed destructive action — kept out of the normal Save round trip
+             so it can never be triggered by an accidental Save click. -->
+        <Border Background="{DynamicResource Surface}"
+                BorderBrush="{DynamicResource Border}"
+                BorderThickness="{DynamicResource BorderThicknessHairline}"
+                CornerRadius="{DynamicResource RadiusMd}"
+                Padding="{DynamicResource SpaceLgThickness}">
+          <StackPanel Spacing="{DynamicResource SpaceSm}">
+            <TextBlock Classes="Body SectionTitle" Text="Data &amp; privacy" />
+
+            <CheckBox Content="Keep last N clips for debugging (off by default — audio is never written to disk otherwise)"
+                      IsChecked="{Binding DebugAudioRetentionEnabled, Mode=TwoWay}" />
+            <TextBlock Classes="Caption" Text="Clips to keep" Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding DebugAudioRetentionMaxClipsText, Mode=TwoWay}" />
+
+            <TextBlock Classes="Caption" Text="Auto-delete history after N days (blank = never)"
+                       Foreground="{DynamicResource TextSecondary}" />
+            <TextBox Text="{Binding HistoryAutoDeleteAfterDaysText, Mode=TwoWay}" />
+
+            <TextBlock Classes="Caption StatusError" TextWrapping="Wrap"
+                       Text="Panic wipe permanently deletes ALL saved history and debug audio clips. This cannot be undone." />
+            <Button Content="Panic wipe..." Click="OnPanicWipeClick" IsEnabled="{Binding !IsWiping}"
+                    Background="{DynamicResource Danger}" Foreground="{DynamicResource Surface}" />
+            <TextBlock Classes="Body" Foreground="{DynamicResource TextSecondary}"
+                       Text="{Binding WipeStatusMessage}"
+                       IsVisible="{Binding WipeStatusMessage, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                       TextWrapping="Wrap" />
+          </StackPanel>
+        </Border>
+
+      </StackPanel>
+    </Grid>
+  </ScrollViewer>
+
+</UserControl>

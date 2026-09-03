@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- Default filter applied by a bare "dotnet test" (no extra flags): excludes
+         Category=Corpus tests, which require the real downloaded model (plan section
+         1.13), and Category=Hardware tests, which require a real audio input device (item
+         4b). Passing an explicit test filter on the command line sets this same MSBuild
+         property, so the Condition below means an explicit filter always wins over this
+         default rather than being AND-combined with it (which a RunSettingsFilePath-based
+         TestCaseFilter would do instead, since VSTest ANDs a runsettings filter with a
+         command line filter rather than letting the command line override it; that
+         approach was tried and rejected for that reason. -->
+    <VSTestTestCaseFilter Condition="'$(VSTestTestCaseFilter)' == ''">Category!=Corpus&amp;Category!=Hardware</VSTestTestCaseFilter>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Soneto.Core\Soneto.Core.csproj" />
+    <!-- Phase 3 item 5's post-review should-fix: DaemonComposition's plain net10.0 build
+         (Soneto.Composition multi-targets net10.0;net10.0-windows and only references
+         Soneto.Platform.Windows under the -windows TFM) is safe to reference from this
+         plain net10.0 test project: needed so DaemonStartupAndRuntimeResilienceTests can
+         call the REAL BuildAndStartSessionControllerAsync instead of re-implementing its
+         catch shape locally. -->
+    <ProjectReference Include="..\..\src\Soneto.Composition\Soneto.Composition.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Real-speech asset for SherpaOnnxTranscriberCorpusTests (Category=Corpus, manual
+         only) — a 16kHz-resampled copy of the sherpa-onnx model release's own
+         test_wavs/en.wav, per that test's doc comment. -->
+    <None Include="TestAssets\en-16k.wav" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Phase 2 item 1: hand-written sample dictionary.json covering all five entry types,
+         used by DictionaryEntryTests for the schema round-trip test. -->
+    <None Include="TestAssets\Dictionary\sample-dictionary.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- Throwaway spike harness. Do not let bin/obj under a Windows-mounted volume collide
+         with the real Windows-side build; keep them local to the container's own filesystem. -->
+    <BaseOutputPath>/tmp/harness-bin/</BaseOutputPath>
+    <BaseIntermediateOutputPath>/tmp/harness-obj/</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Soneto.Core/Soneto.Core.csproj" />
+    <ProjectReference Include="../../../src/Soneto.Platform.Linux/Soneto.Platform.Linux.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />
+  </ItemGroup>
+</Project>

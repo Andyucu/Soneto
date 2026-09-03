@@ -1,0 +1,125 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Soneto.App.ViewModels"
+             xmlns:history="using:Soneto.Core.History"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
+             x:Class="Soneto.App.Views.HistoryView"
+             x:DataType="vm:HistoryViewModel">
+
+  <!-- Item 6 (§3.10): real History list + FTS5 search + per-entry copy + rule-fired diff.
+       Every color/spacing/corner-radius value below is a DynamicResource binding, matching
+       every prior view's discipline: zero hardcoded hex colors or magic-number dimensions.
+
+       Diff highlighting: each Border wrapping a DiffSegment toggles the "Highlighted" style class
+       via the Classes.Highlighted binding shorthand (Avalonia's attached-class-binding syntax)
+       rather than a converter, so the highlight color itself stays a plain DynamicResource
+       Warning style setter below: no converter needed, and the color token stays themeable the
+       normal way. -->
+  <UserControl.Styles>
+    <Style Selector="Border.Highlighted">
+      <Setter Property="Background" Value="{DynamicResource Warning}" />
+    </Style>
+    <Style Selector="Border.Highlighted TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*" Margin="{DynamicResource SpaceLgThickness}"
+        RowSpacing="{DynamicResource SpaceMd}">
+
+    <TextBlock Grid.Row="0" Classes="Title" Text="History"
+               Foreground="{DynamicResource TextPrimary}" />
+
+    <TextBox Grid.Row="1"
+             PlaceholderText="Search history..."
+             Text="{Binding SearchText, Mode=TwoWay}" />
+
+    <Grid Grid.Row="2" ColumnDefinitions="2*,3*"
+          ColumnSpacing="{DynamicResource SpaceLg}">
+
+      <!-- Entry list -->
+      <ListBox Grid.Column="0"
+               ItemsSource="{Binding Entries}"
+               SelectedItem="{Binding SelectedEntry, Mode=TwoWay}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="history:HistoryEntry">
+            <Border Padding="{DynamicResource SpaceSmThickness}"
+                    CornerRadius="{DynamicResource RadiusSm}">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{DynamicResource SpaceSm}">
+                <StackPanel Grid.Column="0" Spacing="{DynamicResource SpaceXs}">
+                  <TextBlock Classes="Body" Text="{Binding FinalText}"
+                             Foreground="{DynamicResource TextPrimary}"
+                             TextTrimming="CharacterEllipsis" MaxLines="1" />
+                  <TextBlock Classes="Caption" Text="{Binding Timestamp}"
+                             Foreground="{DynamicResource TextSecondary}" />
+                </StackPanel>
+                <Button Grid.Column="1" Content="Copy"
+                        Click="OnCopyEntryClick" Tag="{Binding}" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+
+      <!-- Diff panel -->
+      <Border Grid.Column="1"
+              Background="{DynamicResource Surface}"
+              BorderBrush="{DynamicResource Border}"
+              BorderThickness="{DynamicResource BorderThicknessHairline}"
+              CornerRadius="{DynamicResource RadiusMd}"
+              Padding="{DynamicResource SpaceLgThickness}">
+        <ScrollViewer>
+          <StackPanel Spacing="{DynamicResource SpaceLg}">
+
+            <StackPanel Spacing="{DynamicResource SpaceSm}">
+              <TextBlock Classes="Caption" Text="Raw (before dictionary rules)"
+                         Foreground="{DynamicResource TextSecondary}" />
+              <ItemsControl ItemsSource="{Binding RawSegments}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:DiffSegment">
+                    <Border Classes.Highlighted="{Binding IsHighlighted}"
+                            CornerRadius="{DynamicResource RadiusSm}">
+                      <TextBlock Classes="Body" Text="{Binding Text}"
+                                 Foreground="{DynamicResource TextPrimary}" />
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <StackPanel Spacing="{DynamicResource SpaceSm}">
+              <TextBlock Classes="Caption" Text="Final (after dictionary rules)"
+                         Foreground="{DynamicResource TextSecondary}" />
+              <ItemsControl ItemsSource="{Binding FinalSegments}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:DiffSegment">
+                    <Border Classes.Highlighted="{Binding IsHighlighted}"
+                            CornerRadius="{DynamicResource RadiusSm}">
+                      <TextBlock Classes="Body" Text="{Binding Text}"
+                                 Foreground="{DynamicResource TextPrimary}" />
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+
+    </Grid>
+  </Grid>
+
+</UserControl>

@@ -1,0 +1,92 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Soneto.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="650"
+             x:Class="Soneto.App.Views.PermissionsDoctorView"
+             x:DataType="vm:PermissionsDoctorViewModel">
+
+  <!-- Item 9 (§3.13): the real Permissions Doctor. Every check runs a real test against real
+       environment state (PermissionsDoctorViewModel's own doc comment has the full design,
+       including the two safety constraints this item is built around: never a second
+       IHotkeySource, and the "can synthesize input" self-test never touches a window outside
+       Soneto.App's own boundaries). Every color/spacing/dimension value below is a
+       DynamicResource binding, matching every prior view's discipline. -->
+  <UserControl.Styles>
+    <Style Selector="TextBlock.CheckGreen">
+      <Setter Property="Foreground" Value="{DynamicResource Success}" />
+    </Style>
+    <Style Selector="TextBlock.CheckRed">
+      <Setter Property="Foreground" Value="{DynamicResource Danger}" />
+    </Style>
+    <!-- NotTested and Pending both use the Warning token, deliberately distinct from Danger
+         (Red) — a not-yet-run/inconclusive check is not the same signal as a confirmed
+         failure, see PermissionsDoctorLogic.EvaluateHookCheck's own doc comment for why this
+         distinction is load-bearing, not cosmetic. -->
+    <Style Selector="TextBlock.CheckWarn">
+      <Setter Property="Foreground" Value="{DynamicResource Warning}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*" Margin="{DynamicResource SpaceLgThickness}"
+        RowSpacing="{DynamicResource SpaceMd}">
+
+    <TextBlock Grid.Row="0" Classes="Title" Text="Permissions"
+               Foreground="{DynamicResource TextPrimary}" />
+
+    <Button Grid.Row="1" Content="Recheck all" Click="OnRecheckAllClick"
+            IsEnabled="{Binding !IsRecheckingAll}" />
+
+    <ScrollViewer Grid.Row="2">
+      <ItemsControl ItemsSource="{Binding Checks}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Spacing="{DynamicResource SpaceMd}" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:PermissionCheckViewModel">
+            <Border Background="{DynamicResource Surface}"
+                    BorderBrush="{DynamicResource Border}"
+                    BorderThickness="{DynamicResource BorderThicknessHairline}"
+                    CornerRadius="{DynamicResource RadiusMd}"
+                    Padding="{DynamicResource SpaceLgThickness}">
+              <StackPanel Spacing="{DynamicResource SpaceXs}">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Grid.Column="0" Classes="Body" Text="{Binding Name}"
+                             Foreground="{DynamicResource TextPrimary}" />
+                  <TextBlock Grid.Column="1" Classes="Body"
+                             Classes.CheckGreen="{Binding IsGreen}"
+                             Classes.CheckRed="{Binding IsRed}"
+                             Classes.CheckWarn="{Binding IsWarn}"
+                             Text="{Binding StatusLabel}" />
+                </Grid>
+                <TextBlock Classes="Caption" Text="{Binding Detail}"
+                           Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- Constraint 2's own-window-only injection self-test target: a real, normally-rendered
+         (Opacity="1", not 0, see below), normally-focusable TextBox living inside THIS
+         page's own visual tree, moved far outside the window's visible client area via a
+         large negative Margin so a human never sees it (the standard "visually hidden, not
+         collapsed" accessibility pattern). Deliberately NOT Opacity="0"/a near-zero size: a
+         real bug hit and fixed during this item's own live verification found that an
+         Opacity="0" 1x1px TextBox DID receive genuine Avalonia keyboard focus
+         (TextBox.IsFocused was confirmed true) but a real synthetic Ctrl+V paste still didn't
+         land in it; Windows' native Text Services Framework input routing appears to need
+         an actually rendered element, not just a logically focused one, for paste delivery to
+         work. Moving it off-screen instead of hiding it via opacity keeps it a fully real,
+         normally-rendered control while still being invisible to a human. See
+         PermissionsDoctorViewModel's own doc comment (constraint 2) for the full safety
+         reasoning. -->
+    <TextBox Grid.Row="2" x:Name="SelfTestTextBox" Width="60" Height="24"
+             HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-5000,-5000,0,0" />
+  </Grid>
+
+</UserControl>

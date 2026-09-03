@@ -1,0 +1,66 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Type scale (§3.7): one font family (Inter, already pulled in via
+       Avalonia.Fonts.Inter) plus a small Display/Title/Body/Caption scale with
+       consistent line-heights.
+
+       Idiom choice, documented per this item's own instruction to pick one and say
+       why: the scale is exposed BOTH as plain resources (FontSize/FontWeight/
+       LineHeight doubles, one triplet per step, so a view can pull an individual
+       value via {DynamicResource ...} — e.g. the kitchen-sink view's swatches, which
+       must not hardcode any value) AND as TextBlock Style classes built FROM those
+       same resources (so ordinary views just write Classes="Title" instead of
+       re-wiring three DynamicResource bindings per TextBlock). The resources are the
+       single source of truth; the classes are a convenience layer on top, not a
+       second definition. -->
+
+  <Styles.Resources>
+    <FontFamily x:Key="AppFontFamily">avares://Avalonia.Fonts.Inter/Assets#Inter</FontFamily>
+
+    <x:Double x:Key="TypeDisplaySize">32</x:Double>
+    <FontWeight x:Key="TypeDisplayWeight">Bold</FontWeight>
+    <x:Double x:Key="TypeDisplayLineHeight">40</x:Double>
+
+    <x:Double x:Key="TypeTitleSize">22</x:Double>
+    <FontWeight x:Key="TypeTitleWeight">SemiBold</FontWeight>
+    <x:Double x:Key="TypeTitleLineHeight">28</x:Double>
+
+    <x:Double x:Key="TypeBodySize">14</x:Double>
+    <FontWeight x:Key="TypeBodyWeight">Normal</FontWeight>
+    <x:Double x:Key="TypeBodyLineHeight">20</x:Double>
+
+    <x:Double x:Key="TypeCaptionSize">12</x:Double>
+    <FontWeight x:Key="TypeCaptionWeight">Normal</FontWeight>
+    <x:Double x:Key="TypeCaptionLineHeight">16</x:Double>
+  </Styles.Resources>
+
+  <Style Selector="TextBlock">
+    <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
+  </Style>
+
+  <Style Selector="TextBlock.Display">
+    <Setter Property="FontSize" Value="{DynamicResource TypeDisplaySize}" />
+    <Setter Property="FontWeight" Value="{DynamicResource TypeDisplayWeight}" />
+    <Setter Property="LineHeight" Value="{DynamicResource TypeDisplayLineHeight}" />
+  </Style>
+
+  <Style Selector="TextBlock.Title">
+    <Setter Property="FontSize" Value="{DynamicResource TypeTitleSize}" />
+    <Setter Property="FontWeight" Value="{DynamicResource TypeTitleWeight}" />
+    <Setter Property="LineHeight" Value="{DynamicResource TypeTitleLineHeight}" />
+  </Style>
+
+  <Style Selector="TextBlock.Body">
+    <Setter Property="FontSize" Value="{DynamicResource TypeBodySize}" />
+    <Setter Property="FontWeight" Value="{DynamicResource TypeBodyWeight}" />
+    <Setter Property="LineHeight" Value="{DynamicResource TypeBodyLineHeight}" />
+  </Style>
+
+  <Style Selector="TextBlock.Caption">
+    <Setter Property="FontSize" Value="{DynamicResource TypeCaptionSize}" />
+    <Setter Property="FontWeight" Value="{DynamicResource TypeCaptionWeight}" />
+    <Setter Property="LineHeight" Value="{DynamicResource TypeCaptionLineHeight}" />
+  </Style>
+
+</Styles>

@@ -1,0 +1,48 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
+        x:Class="Soneto.App.Views.MainWindow"
+        Title="Soneto"
+        Width="900" Height="650"
+        Background="{DynamicResource Background}">
+
+  <!-- Item 4 (§3.8): the real nav-rail shell, replacing item 3's scratch
+       KitchenSinkView content. Four flat top-level destinations, no deep navigation
+       stack — a ListBox nav rail + a ContentControl that swaps content on selection
+       is all this scale needs (§3.8's own explicit instruction not to build a
+       general-purpose navigation-service abstraction for 4 static destinations).
+       Every dimension/color/spacing value below is a {DynamicResource ...} binding,
+       matching the discipline KitchenSinkView.axaml (item 3) established. -->
+  <Grid ColumnDefinitions="Auto,*">
+
+    <Border Grid.Column="0"
+            Width="{DynamicResource SizeNavRailWidth}"
+            Background="{DynamicResource Surface}"
+            BorderBrush="{DynamicResource Border}"
+            BorderThickness="0,0,1,0">
+      <StackPanel>
+        <TextBlock Classes="Title" Text="Soneto"
+                   Foreground="{DynamicResource TextPrimary}"
+                   Margin="{DynamicResource SpaceLgThickness}" />
+
+        <ListBox x:Name="NavList"
+                 SelectionChanged="OnNavSelectionChanged"
+                 Background="Transparent"
+                 Margin="{DynamicResource SpaceSmThickness}">
+          <ListBoxItem Content="History" />
+          <ListBoxItem Content="Dictionary" />
+          <ListBoxItem Content="Settings" />
+          <ListBoxItem Content="Permissions" />
+        </ListBox>
+      </StackPanel>
+    </Border>
+
+    <ContentControl x:Name="NavContent"
+                     Grid.Column="1"
+                     Margin="{DynamicResource SpaceXlThickness}" />
+
+  </Grid>
+
+</Window>

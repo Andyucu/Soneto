@@ -1,0 +1,13 @@
+# .NET build output
+bin/
+obj/
+
+# Downloaded ASR models — large binaries, fetched per spikes/s1-asr/README.md
+models/
+
+# Serilog rolling file sink output (Soneto.Daemon, §1.11)
+logs/
+
+# Stray artifacts from accidental Windows shell redirects
+err.log
+nul

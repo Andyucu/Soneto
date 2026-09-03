@@ -1,0 +1,24 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Spacing scale (§3.7): 4/8/12/16/24/32px, named Xs/Sm/Md/Lg/Xl/Xxl, used for
+       every margin/padding in every view instead of magic-number Thickness values.
+       Both the raw double (for code-behind/converters that need a number) and a
+       matching Thickness (uniform on all four sides, the common case for
+       margin/padding in this app's views) are provided per step. -->
+
+  <x:Double x:Key="SpaceXs">4</x:Double>
+  <x:Double x:Key="SpaceSm">8</x:Double>
+  <x:Double x:Key="SpaceMd">12</x:Double>
+  <x:Double x:Key="SpaceLg">16</x:Double>
+  <x:Double x:Key="SpaceXl">24</x:Double>
+  <x:Double x:Key="SpaceXxl">32</x:Double>
+
+  <Thickness x:Key="SpaceXsThickness">4</Thickness>
+  <Thickness x:Key="SpaceSmThickness">8</Thickness>
+  <Thickness x:Key="SpaceMdThickness">12</Thickness>
+  <Thickness x:Key="SpaceLgThickness">16</Thickness>
+  <Thickness x:Key="SpaceXlThickness">24</Thickness>
+  <Thickness x:Key="SpaceXxlThickness">32</Thickness>
+
+</ResourceDictionary>
